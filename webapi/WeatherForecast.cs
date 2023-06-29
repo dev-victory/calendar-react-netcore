@@ -1,4 +1,4 @@
-namespace webapi;
+namespace CalendarInvitation.WebApi;
 
 public class WeatherForecast
 {

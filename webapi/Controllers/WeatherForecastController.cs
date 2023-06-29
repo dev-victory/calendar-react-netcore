@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace webapi.Controllers;
+namespace CalendarInvitation.WebApi.Controllers;
 
 [ApiController]
 [Route("[controller]")]
