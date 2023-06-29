@@ -1,21 +1,39 @@
+using CalendarInvitation.Auth.Authorization;
+using CalendarInvitation.Auth.Models;
+using CalendarInvitation.Auth.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CalendarInvitation.WebApi.Controllers;
 
+[Authorize]
 [ApiController]
 [Route("[controller]")]
 public class WeatherForecastController : ControllerBase
 {
+    private IUserService _userService;
+    private readonly ILogger<WeatherForecastController> _logger;
+
     private static readonly string[] Summaries = new[]
     {
         "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
     };
 
-    private readonly ILogger<WeatherForecastController> _logger;
-
-    public WeatherForecastController(ILogger<WeatherForecastController> logger)
+    public WeatherForecastController(IUserService userService, ILogger<WeatherForecastController> logger)
     {
-        _logger = logger;
+        _userService = userService ?? throw new ArgumentNullException(nameof(userService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("authenticate")]
+    public IActionResult Authenticate(AuthenticateRequest model)
+    {
+        var response = _userService.Authenticate(model);
+
+        if (response == null)
+            return BadRequest(new { message = "Username or password is incorrect" });
+
+        return Ok(response);
     }
 
     [HttpGet(Name = "GetWeatherForecast")]
