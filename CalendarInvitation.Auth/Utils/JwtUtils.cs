@@ -10,6 +10,7 @@ namespace CalendarInvitation.Auth.Utils
 {
     public class JwtUtils : IJwtUtils
     {
+        private const string claimIdentifierType = "id";
         private readonly AppSettings _appSettings;
 
         public JwtUtils(IOptions<AppSettings> appSettings)
@@ -27,7 +28,7 @@ namespace CalendarInvitation.Auth.Utils
             var key = Encoding.ASCII.GetBytes(_appSettings.Secret!);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] { new Claim("id", user.Id.ToString()) }),
+                Subject = new ClaimsIdentity(new[] { new Claim(claimIdentifierType, user.Id.ToString()) }),
                 Expires = DateTime.UtcNow.AddDays(7),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
@@ -55,7 +56,7 @@ namespace CalendarInvitation.Auth.Utils
                 }, out SecurityToken validatedToken);
 
                 var jwtToken = (JwtSecurityToken)validatedToken;
-                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == "id").Value);
+                var userId = int.Parse(jwtToken.Claims.First(x => x.Type == claimIdentifierType).Value);
 
                 // return user id from JWT token if validation successful
                 return userId;

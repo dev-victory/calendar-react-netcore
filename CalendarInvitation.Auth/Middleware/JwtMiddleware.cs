@@ -1,11 +1,6 @@
 ﻿using CalendarInvitation.Auth.Services;
 using CalendarInvitation.Auth.Utils;
 using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CalendarInvitation.Auth.Middleware
 {
@@ -18,6 +13,7 @@ namespace CalendarInvitation.Auth.Middleware
             _next = next;
         }
 
+        // TODO: implement refresh tokens
         public async Task Invoke(HttpContext context, IUserService userService, IJwtUtils jwtUtils)
         {
             var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
