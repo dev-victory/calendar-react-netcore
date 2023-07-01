@@ -3,7 +3,7 @@ using CalendarInvitation.Auth.Models;
 using CalendarInvitation.Auth.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CalendarInvitation.WebApi.Controllers;
+namespace CalendarInvitation.Api.Controllers;
 
 [Authorize]
 [ApiController]
