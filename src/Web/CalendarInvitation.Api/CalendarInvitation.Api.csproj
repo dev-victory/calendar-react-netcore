@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Services\Auth\CalendarInvitation.Auth\CalendarInvitation.Auth.csproj" />
+    <ProjectReference Include="..\..\Services\Auth\CalendarInvitation.Auth.csproj" />
   </ItemGroup>
 
 </Project>
