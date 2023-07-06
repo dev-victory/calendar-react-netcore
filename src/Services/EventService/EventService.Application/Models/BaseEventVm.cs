@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace EventService.Application.Features.Events.Queries.GetEventList
+﻿namespace EventService.Application.Models
 {
-    public class EventVm
+    public class BaseEventVm
     {
-        public Guid EventId { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
         public DateTime StartDate { get; set; }

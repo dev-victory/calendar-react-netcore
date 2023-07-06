@@ -1,6 +1,7 @@
-﻿using EventService.Application.Features.Events.Queries.GetEventList;
-using EventService.Domain.Entities;
+﻿using EventService.Domain.Entities;
 using AutoMapper;
+using EventService.Application.Models;
+using EventService.Application.Features.Events.Commands.CreateEvent;
 
 namespace EventService.Application.Mapping
 {
@@ -9,6 +10,9 @@ namespace EventService.Application.Mapping
         public MappingProfile()
         {
             CreateMap<Event, EventVm>().ReverseMap();
+            CreateMap<Event, CreateEventCommand>().ReverseMap();
+            CreateMap<EventInvitation, EventInvitationVm>().ReverseMap();
+            CreateMap<EventNotification, EventNotificationVm>().ReverseMap();
         }
     }
 }

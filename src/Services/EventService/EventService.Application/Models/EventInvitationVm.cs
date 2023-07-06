@@ -1,9 +1,8 @@
-﻿namespace EventService.Application.Features.Events.Queries.GetEventList
+﻿namespace EventService.Application.Models
 {
     public class EventInvitationVm
     {
         public Guid InviterId { get; set; }
-        public int EventId { get; set; }
         public string InviteeEmailId { get; set; }
     }
 }

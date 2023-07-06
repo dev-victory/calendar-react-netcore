@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using EventService.Application.Models;
 using EventService.Application.Persistence;
 using MediatR;
 

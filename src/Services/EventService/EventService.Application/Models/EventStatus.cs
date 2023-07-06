@@ -1,4 +1,4 @@
-﻿namespace EventService.Application.Features.Events.Queries.GetEventList
+﻿namespace EventService.Application.Models
 {
     public enum EventStatus
     {

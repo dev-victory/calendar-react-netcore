@@ -1,4 +1,5 @@
-﻿using MediatR;
+﻿using EventService.Application.Models;
+using MediatR;
 
 namespace EventService.Application.Features.Events.Queries.GetEventList
 {
