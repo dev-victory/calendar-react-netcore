@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.OpenApi.Models;
+﻿using EventService.Application;
 using EventService.Infrastructure;
+using Microsoft.OpenApi.Models;
 
 namespace EventService.Api
 {
@@ -16,7 +16,7 @@ namespace EventService.Api
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            //services.AddApplicationServices();
+            services.AddApplicationServices();
             services.AddInfrastructureServices(Configuration);
 
             // MassTransit-RabbitMQ Configuration

@@ -1,4 +1,6 @@
-﻿using EventService.Infrastructure.Persistence;
+﻿using EventService.Application.Persistence;
+using EventService.Infrastructure.Persistence;
+using EventService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,6 +13,9 @@ namespace EventService.Infrastructure
         {
             services.AddDbContext<EventContext>(options =>
                            options.UseSqlServer(configuration.GetConnectionString("EventConnectionString")));
+
+            services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
+            services.AddScoped<IEventRepository, EventRepository>();
 
             return services;
         }

@@ -27,7 +27,8 @@ namespace EventService.Infrastructure.Persistence
                     StartDate = DateTime.Now,
                     EndDate = DateTime.Now.AddDays(1),
                     Timezone = "",
-                    Location = ""
+                    Location = "",
+                    CreatedBy = new Guid("7F417C78-8FF4-4F17-A009-91C92471A259")
                 }
             };
         }
