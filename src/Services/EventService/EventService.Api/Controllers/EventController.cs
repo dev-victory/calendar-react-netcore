@@ -1,4 +1,5 @@
 ﻿using EventService.Application.Features.Events.Commands.CreateEvent;
+using EventService.Application.Features.Events.Queries.GetEventById;
 using EventService.Application.Features.Events.Queries.GetEventList;
 using EventService.Application.Models;
 using MediatR;
@@ -18,11 +19,22 @@ namespace EventService.Api.Controllers
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
-        [HttpGet("{userId}", Name = "GetEvent")]
+        [HttpGet("{userId}", Name = "GetEventsByUser")]
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<EventVm>>> GetOrdersByUserName(Guid userId)
+        public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId(Guid userId)
         {
             var query = new GetEventListQuery(userId);
+            var events = await _mediator.Send(query);
+
+            return Ok(events);
+        }
+
+        // TODO: add user Id for security?
+        [HttpGet("[action]/{eventId}", Name = "GetEventById")]
+        [ProducesResponseType(typeof(EventVm), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
+        {
+            var query = new GetEventByIdQuery(eventId);
             var events = await _mediator.Send(query);
 
             return Ok(events);
