@@ -35,9 +35,9 @@ namespace EventService.Api.Controllers
         public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
         {
             var query = new GetEventByIdQuery(eventId);
-            var events = await _mediator.Send(query);
+            var eventDetails = await _mediator.Send(query);
 
-            return Ok(events);
+            return Ok(eventDetails);
         }
 
         [HttpPost]

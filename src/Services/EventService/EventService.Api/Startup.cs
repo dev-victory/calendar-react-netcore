@@ -19,20 +19,6 @@ namespace EventService.Api
             services.AddApplicationServices();
             services.AddInfrastructureServices(Configuration);
 
-            // MassTransit-RabbitMQ Configuration
-            //services.AddMassTransit(config =>
-            //{
-            //    config.AddConsumer<BasketCheckoutConsumer>();
-            //    config.UsingRabbitMq((ctx, cfg) =>
-            //    {
-            //        cfg.Host(Configuration["EventBusSettings:HostAddress"]);
-            //        cfg.ReceiveEndpoint(EventBusConstants.BasketCheckoutQueue, c =>
-            //        {
-            //            c.ConfigureConsumer<BasketCheckoutConsumer>(ctx);
-            //        });
-            //    });
-            //});
-
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
