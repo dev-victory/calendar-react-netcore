@@ -7,7 +7,7 @@ Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "CalendarInvitation.Client",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalendarInvitation.Api", "src\Web\CalendarInvitation.Api\CalendarInvitation.Api.csproj", "{AABD68DE-6AF7-4F5D-99A5-CA1E171B54FE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalendarInvitation.Auth", "src\Services\Auth\CalendarInvitation.Auth\CalendarInvitation.Auth.csproj", "{60FD6837-5278-44EF-9889-3DDB76C1DE6A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalendarInvitation.Auth", "src\Services\Auth\CalendarInvitation.Auth.csproj", "{60FD6837-5278-44EF-9889-3DDB76C1DE6A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{D68E6DAF-3427-445D-98CC-0104C8565AFD}"
 EndProject
@@ -25,13 +25,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserService", "UserService"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalendarInvitation.UserService.Api", "src\Services\UserService\CalendarInvitation.UserService\CalendarInvitation.UserService.Api.csproj", "{392C1218-F159-4B03-89F4-2E19E9B5A71A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Application", "src\Services\EventService\EventService.Application\EventService.Application\EventService.Application.csproj", "{D73AC619-690E-46CF-B350-E732289F3355}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Application", "src\Services\EventService\EventService.Application\EventService.Application.csproj", "{D73AC619-690E-46CF-B350-E732289F3355}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Infrastructure", "src\Services\EventService\EventService.Infrastructure\EventService.Infrastructure\EventService.Infrastructure.csproj", "{ED1E0941-9365-4FD7-AE2E-508ECF7F0861}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Infrastructure", "src\Services\EventService\EventService.Infrastructure\EventService.Infrastructure.csproj", "{ED1E0941-9365-4FD7-AE2E-508ECF7F0861}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Domain", "src\Services\EventService\EventService.Domain\EventService.Domain\EventService.Domain.csproj", "{ADFB275C-B1AA-4416-BD47-D2605C46D80C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Domain", "src\Services\EventService\EventService.Domain\EventService.Domain.csproj", "{ADFB275C-B1AA-4416-BD47-D2605C46D80C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventService.Api", "src\Services\EventService\EventService.Api\EventService.Api\EventService.Api.csproj", "{D84F9B9D-7976-4F92-B391-5CC06FAAD6C3}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventService.Api", "src\Services\EventService\EventService.Api\EventService.Api.csproj", "{D84F9B9D-7976-4F92-B391-5CC06FAAD6C3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
