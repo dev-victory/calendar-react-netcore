@@ -43,6 +43,10 @@
         "Period": "3s",
         "PeriodTimespan": 1,
         "Limit": 1
+      },
+      "AuthenticationOptions": {
+        "AuthenticationProviderKey": "Bearer",
+        "AllowedScopes": []
       }
     }
   ],

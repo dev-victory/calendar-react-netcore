@@ -12,7 +12,7 @@ namespace EventService.Infrastructure.Repositories
 
         }
 
-        public async Task<IEnumerable<Event>> GetEvents(Guid userId)
+        public async Task<IEnumerable<Event>> GetEvents(string userId)
         {
             var _Type = typeof(Event);
             var _Prop = _Type.GetProperty("CreatedBy");

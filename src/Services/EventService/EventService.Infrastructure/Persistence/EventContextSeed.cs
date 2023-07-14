@@ -28,7 +28,23 @@ namespace EventService.Infrastructure.Persistence
                     EndDate = DateTime.Now.AddDays(1),
                     Timezone = "",
                     Location = "",
-                    CreatedBy = new Guid("7F417C78-8FF4-4F17-A009-91C92471A259")
+                    CreatedBy = "abc123456",
+                    Invitees = new List<EventInvitation>
+                    {
+                        new EventInvitation
+                        {
+                            InviteeEmailId = "test@g.com",
+                            CreatedBy = "abc123456"
+                        }
+                    },
+                    Notifications = new List<EventNotification>
+                    {
+                        new EventNotification
+                        {
+                            NotificationDate = DateTime.Now.AddDays(15),
+                            CreatedBy = "abc123456"
+                        }
+                    }
                 }
             };
         }

@@ -10,6 +10,15 @@ namespace ApiGateway
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            var authenticationProviderKey = "Bearer";
+
+            services.AddAuthentication()
+            .AddJwtBearer(authenticationProviderKey, x =>
+            {
+                x.Authority = "https://dev-xbyetq2ijrz8v4i0.us.auth0.com/"; // move to appsettings.json
+                x.Audience = "https://calendar-invitation-api/";
+            });
+
             services.AddOcelot()
                 .AddCacheManager(settings => settings.WithDictionaryHandle());
         }
@@ -28,7 +37,7 @@ namespace ApiGateway
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync("Hello World!");
+                    await context.Response.WriteAsync("Hello from Calendar Invite API gateway!");
                 });
             });
 
