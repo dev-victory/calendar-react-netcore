@@ -27,7 +27,7 @@ namespace EventService.Api
             services.AddAuthentication()
                .AddJwtBearer(authenticationProviderKey, x =>
                {
-                   x.Authority = "https://dev-xbyetq2ijrz8v4i0.us.auth0.com/"; // move to appsettings.json
+                   x.Authority = "https://dev-xbyetq2ijrz8v4i0.us.auth0.com/"; // TODO move to appsettings.json
                    x.Audience = "https://calendar-invitation-api/";
                });
 

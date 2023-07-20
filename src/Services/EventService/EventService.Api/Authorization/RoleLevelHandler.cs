@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace EventService.Api.Authorization
 {
@@ -6,7 +7,7 @@ namespace EventService.Api.Authorization
     {
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, RoleLevelRequirement requirement)
         {
-            var role = context.User.Claims.FirstOrDefault(a => a.Type == "Role")?.Value;
+            var role = context.User.Claims.FirstOrDefault(a => a.Type == ClaimTypes.Role)?.Value;
 
             if (role != requirement.RequiredPermissionRole)
             {
