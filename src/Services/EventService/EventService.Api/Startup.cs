@@ -1,5 +1,7 @@
-﻿using EventService.Application;
+﻿using EventService.Api.Authorization;
+using EventService.Application;
 using EventService.Infrastructure;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
 
 namespace EventService.Api
@@ -18,6 +20,28 @@ namespace EventService.Api
         {
             services.AddApplicationServices();
             services.AddInfrastructureServices(Configuration);
+
+            #region Auth
+            var authenticationProviderKey = "Bearer";
+
+            services.AddAuthentication()
+               .AddJwtBearer(authenticationProviderKey, x =>
+               {
+                   x.Authority = "https://dev-xbyetq2ijrz8v4i0.us.auth0.com/"; // TODO move to appsettings.json
+                   x.Audience = "https://calendar-invitation-api/";
+               });
+
+            
+            services.AddScoped<IAuthorizationHandler, RoleLevelHandler>();
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("MustBeVerifiedUser", policyBuilder =>
+                {
+                    policyBuilder.RequireAuthenticatedUser();
+                    policyBuilder.AddRequirements(new RoleLevelRequirement("User"));
+                });
+            });
+            #endregion
 
             services.AddControllers();
             services.AddSwaggerGen(c =>
@@ -38,6 +62,7 @@ namespace EventService.Api
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
