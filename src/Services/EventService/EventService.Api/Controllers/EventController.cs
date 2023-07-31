@@ -6,6 +6,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 
 namespace EventService.Api.Controllers
 {
@@ -25,8 +26,9 @@ namespace EventService.Api.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId()
         {
+            var userId = User.Claims.FirstOrDefault(x=> x.Type == ClaimTypes.NameIdentifier)?.Value;
             // TODO: get userId from claims
-            var query = new GetEventListQuery("abc123456");
+            var query = new GetEventListQuery(userId);
             var events = await _mediator.Send(query);
 
             return Ok(events);

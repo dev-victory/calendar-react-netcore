@@ -12,8 +12,6 @@ export function getConfig() {
       ? configJson.audience
       : null;
 
-      console.info(configJson);
-
   return {
     domain: configJson.domain,
     clientId: configJson.clientId,

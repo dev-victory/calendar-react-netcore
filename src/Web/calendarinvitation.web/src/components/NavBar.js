@@ -69,18 +69,6 @@ const NavBar = () => {
               )}
             </Nav>
             <Nav className="d-none d-md-block" navbar>
-              {!isAuthenticated && (
-                <NavItem>
-                  <Button
-                    id="qsLoginBtn"
-                    color="primary"
-                    className="btn-margin"
-                    onClick={() => loginWithRedirect()}
-                  >
-                    Log in
-                  </Button>
-                </NavItem>
-              )}
               {isAuthenticated && (
                 <UncontrolledDropdown nav inNavbar>
                   <DropdownToggle nav caret id="profileDropDown">
@@ -112,20 +100,6 @@ const NavBar = () => {
                 </UncontrolledDropdown>
               )}
             </Nav>
-            {!isAuthenticated && (
-              <Nav className="d-md-none" navbar>
-                <NavItem>
-                  <Button
-                    id="qsLoginBtn"
-                    color="primary"
-                    block
-                    onClick={() => loginWithRedirect({})}
-                  >
-                    Log in
-                  </Button>
-                </NavItem>
-              </Nav>
-            )}
             {isAuthenticated && (
               <Nav
                 className="d-md-none justify-content-between"
