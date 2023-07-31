@@ -5,6 +5,7 @@ import moment from "moment";
 import { useAuth0 } from "@auth0/auth0-react";
 import CustomEvent from "./CustomEvent";
 import "react-big-calendar/lib/css/react-big-calendar.css";
+import Modal from "./Modal";
 
 const Content = () => {
   const localizer = momentLocalizer(moment);
@@ -12,6 +13,14 @@ const Content = () => {
   const { user } = useAuth0();
   const { getAccessTokenSilently } = useAuth0();
   const clickRef = useRef(null);
+
+  const [isOpen, setIsOpen] = useState(false);
+
+  const [eventData, setEventData] = useState({
+    start: '',
+    end: ''
+  });
+
   const [state, setState] = useState({
     events: [],
     apiMessage: "",
@@ -69,7 +78,7 @@ const Content = () => {
      */
     window.clearTimeout(clickRef?.current);
     // clickRef.current = window.setTimeout(() => {
-      window.alert(JSON.stringify(calEvent))
+    window.alert(JSON.stringify(calEvent))
     // }, 250);
   }, []);
 
@@ -79,23 +88,36 @@ const Content = () => {
      */
     window.clearTimeout(clickRef?.current)
     // clickRef.current = window.setTimeout(() => {
-      window.alert(JSON.stringify(calEvent))
+    window.alert(JSON.stringify(calEvent))
     // }, 250);
   }, []);
 
+  const openAddEventModal = useCallback(({ start, end }) => {
+    setEventData({
+      start: start.toString(),
+      end: end.toString()
+    });
+    setIsOpen(true);
+  }, []);
+
   return (
-    <Calendar
-      localizer={localizer}
-      defaultDate={new Date()}
-      defaultView={Views.WEEK}
-      events={state.events}
-      // components={{
-      //   event: CustomEvent // use your custom event component
-      // }}
-      onDoubleClickEvent={onDoubleClickEvent}
-      onSelectEvent={onSelectEvent}
-      style={{ height: "70vh", marginBottom: "2vh" }}
-    />
+    <>
+      <Calendar
+        localizer={localizer}
+        defaultDate={new Date()}
+        defaultView={Views.WEEK}
+        events={state.events}
+        // components={{
+        //   event: CustomEvent // use your custom event component
+        // }}
+        onSelectSlot={openAddEventModal}
+        onDoubleClickEvent={onDoubleClickEvent}
+        onSelectEvent={onSelectEvent}
+        selectable
+        style={{ height: "70vh", marginBottom: "2vh" }}
+      />
+      {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} />}
+    </>
   );
 }
 
