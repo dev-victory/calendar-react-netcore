@@ -33,3 +33,7 @@
 .result-block-container .result-block {
   opacity: 1;
 }
+
+.rbc-row-content {
+  position: initial;
+}
