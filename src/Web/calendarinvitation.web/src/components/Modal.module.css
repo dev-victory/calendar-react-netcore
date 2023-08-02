@@ -128,3 +128,7 @@
   transform: none;
   background: whitesmoke;
 }
+
+.multiAddContainer {
+  width: fit-content;
+}

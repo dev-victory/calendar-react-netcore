@@ -1,9 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback, buildMessage } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
 import { useAuth0 } from "@auth0/auth0-react";
-import CustomEvent from "./CustomEvent";
 import "react-big-calendar/lib/css/react-big-calendar.css";
 import Modal from "./Modal";
 
@@ -12,7 +11,6 @@ const Content = () => {
   const apiOrigin = "http://localhost:5020"; // TODO move to config
   const { user } = useAuth0();
   const { getAccessTokenSilently } = useAuth0();
-  const clickRef = useRef(null);
 
   const [isOpen, setIsOpen] = useState(false);
 
@@ -30,10 +28,6 @@ const Content = () => {
 
   useEffect(() => {
     getAllEvents(user.sub);
-
-    return () => {
-      window.clearTimeout(clickRef?.current)
-    }
   }, []);
 
   const getAllEvents = async (userId) => {
@@ -52,7 +46,7 @@ const Content = () => {
           id: e.eventId,
           start: new Date(e.startDate),
           end: new Date(e.endDate),
-          title: "Some title"
+          title: e.name
         };
       });
 
@@ -68,28 +62,9 @@ const Content = () => {
     }
   };
 
-  const onSelectEvent = useCallback((calEvent) => {
-    /**
-     * Here we are waiting 250 milliseconds (use what you want) prior to firing
-     * our method. Why? Because both 'click' and 'doubleClick'
-     * would fire, in the event of a 'doubleClick'. By doing
-     * this, the 'click' handler is overridden by the 'doubleClick'
-     * action.
-     */
-    window.clearTimeout(clickRef?.current);
-    // clickRef.current = window.setTimeout(() => {
-    window.alert(JSON.stringify(calEvent))
-    // }, 250);
-  }, []);
-
   const onDoubleClickEvent = useCallback((calEvent) => {
-    /**
-     * Notice our use of the same ref as above.
-     */
-    window.clearTimeout(clickRef?.current)
-    // clickRef.current = window.setTimeout(() => {
+    // TODO: add event details modal with ability to update/delete
     window.alert(JSON.stringify(calEvent))
-    // }, 250);
   }, []);
 
   const openAddEventModal = useCallback(({ start, end }) => {
@@ -97,6 +72,7 @@ const Content = () => {
       start: start.toString(),
       end: end.toString()
     });
+
     setIsOpen(true);
   }, []);
 
@@ -107,12 +83,8 @@ const Content = () => {
         defaultDate={new Date()}
         defaultView={Views.WEEK}
         events={state.events}
-        // components={{
-        //   event: CustomEvent // use your custom event component
-        // }}
         onSelectSlot={openAddEventModal}
         onDoubleClickEvent={onDoubleClickEvent}
-        onSelectEvent={onSelectEvent}
         selectable
         style={{ height: "70vh", marginBottom: "2vh" }}
       />

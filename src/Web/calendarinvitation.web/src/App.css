@@ -35,5 +35,5 @@
 }
 
 .rbc-row-content {
-  position: initial;
+  z-index: 0;
 }

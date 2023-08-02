@@ -26,8 +26,9 @@ namespace EventService.Api.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId()
         {
+            // TODO: add user context manager
             var userId = User.Claims.FirstOrDefault(x=> x.Type == ClaimTypes.NameIdentifier)?.Value;
-            // TODO: get userId from claims
+
             var query = new GetEventListQuery(userId);
             var events = await _mediator.Send(query);
 
@@ -50,12 +51,19 @@ namespace EventService.Api.Controllers
             return Ok(eventDetails);
         }
 
+        // DELETE method - remember to create and set isDeleted column in events
+
+        // PUT method - update existing event with new values
+
+
         // TODO: validate incoming payload in application layer
         [HttpPost]
         [ProducesResponseType(typeof(Guid), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<Guid>> CreateEvent([FromBody] CreateEventCommand command)
         {
-            command.CreatedBy = "abc123456"; // TODO: add user ID from claims
+            // TODO: add user context manager
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            command.CreatedBy = userId;
             var eventId = await _mediator.Send(command);
 
             return Ok(eventId);

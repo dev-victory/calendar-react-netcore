@@ -12,7 +12,7 @@
       ],
       "UpstreamPathTemplate": "/Event/GetEventsByUser/{userId}",
       "UpstreamHttpMethod": [ "GET" ],
-      "FileCacheOptions": { "TtlSeconds": 30 }
+      "FileCacheOptions": { "TtlSeconds": 10 }
     },
     {
       "DownstreamPathTemplate": "/api/v1/Event/GetEventById/{id}",
@@ -38,16 +38,16 @@
       "UpstreamPathTemplate": "/Event",
       "UpstreamHttpMethod": [ "POST" ],
       "RateLimitOptions": {
-        "ClientWhitelist": [],
+        //"ClientWhitelist": [],
         "EnableRateLimiting": true,
         "Period": "3s",
         "PeriodTimespan": 1,
         "Limit": 1
-      },
-      "AuthenticationOptions": {
-        "AuthenticationProviderKey": "Bearer",
-        "AllowedScopes": []
       }
+      //"AuthenticationOptions": {
+      //  "AuthenticationProviderKey": "Bearer",
+      //  "AllowedScopes": []
+      //}
     }
   ],
   "GlobalConfiguration": {

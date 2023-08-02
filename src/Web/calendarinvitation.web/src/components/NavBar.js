@@ -1,17 +1,16 @@
 import React, { useState } from "react";
 import { NavLink as RouterNavLink } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCalendarWeek } from '@fortawesome/free-solid-svg-icons';
 
 import {
   Collapse,
   Container,
   Navbar,
   NavbarToggler,
-  NavbarBrand,
   Nav,
   NavItem,
   NavLink,
-  Button,
   UncontrolledDropdown,
   DropdownToggle,
   DropdownMenu,
@@ -25,7 +24,6 @@ const NavBar = () => {
   const {
     user,
     isAuthenticated,
-    loginWithRedirect,
     logout,
   } = useAuth0();
   const toggle = () => setIsOpen(!isOpen);
@@ -41,7 +39,7 @@ const NavBar = () => {
     <div className="nav-container">
       <Navbar color="light" light expand="md" container={false}>
         <Container>
-          <NavbarBrand className="logo" />
+        <a href="/" className="mr-3"><FontAwesomeIcon icon={faCalendarWeek} size="3x"/></a>
           <NavbarToggler onClick={toggle} />
           <Collapse isOpen={isOpen} navbar>
             <Nav className="mr-auto" navbar>
