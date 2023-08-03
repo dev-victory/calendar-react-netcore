@@ -24,7 +24,23 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             var eventEntity = _mapper.Map<Event>(request);
             eventEntity.EventId = Guid.NewGuid();
             eventEntity.CreatedBy = request.CreatedBy;
-            // TODO: set createdby value, once auth is added
+            
+            if (eventEntity.Notifications.Any())
+            {
+                foreach (var notification in eventEntity.Notifications)
+                {
+                    notification.CreatedBy = request.CreatedBy;
+                }
+            }
+
+            if (eventEntity.Invitees.Any())
+            {
+                foreach (var invitee in eventEntity.Invitees)
+                {
+                    invitee.CreatedBy = request.CreatedBy;
+                }
+            }
+
             var newEvent = await _eventRepository.AddAsync(eventEntity);
             _logger.LogInformation($"Event {newEvent.EventId} is successfully created");
 

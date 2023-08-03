@@ -1,4 +1,6 @@
 ﻿using EventService.Application.Features.Events.Commands.CreateEvent;
+using EventService.Application.Features.Events.Commands.DeleteEvent;
+using EventService.Application.Features.Events.Commands.UpdateEvent;
 using EventService.Application.Features.Events.Queries.GetEventById;
 using EventService.Application.Features.Events.Queries.GetEventList;
 using EventService.Application.Models;
@@ -56,9 +58,30 @@ namespace EventService.Api.Controllers
         }
 
         // DELETE method - remember to create and set isDeleted column in events
+        [HttpDelete]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public async Task<ActionResult> DeleteEvent([FromBody] DeleteEventCommand command)
+        {
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            
+            // TODO: check permissions if creator is deleting?
+            await _mediator.Send(command);
+
+            return Ok();
+        }
+
 
         // PUT method - update existing event with new values
+        [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public async Task<ActionResult> UpdateEvent([FromBody] UpdateEventCommand command)
+        {
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            command.ModifiedBy = userId;
+            await _mediator.Send(command);
 
+            return Ok();
+        }
 
         // TODO: 
         // 1. validate incoming payload in application layer
@@ -72,7 +95,7 @@ namespace EventService.Api.Controllers
             command.CreatedBy = userId;
             var eventId = await _mediator.Send(command);
 
-            return Created("", eventId);
+            return Created("/Event/GetEventById/", eventId);
         }
     }
 }
