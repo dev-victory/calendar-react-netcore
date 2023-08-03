@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import styles from "./Modal.module.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWindowClose } from '@fortawesome/free-solid-svg-icons';
+import { faWindowClose, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useAuth0 } from "@auth0/auth0-react";
 import moment from "moment";
 
@@ -23,7 +23,7 @@ const MyTextArea = ({ label, ...props }) => {
   return (
     <>
       <label htmlFor={props.id || props.name}>{label}</label>
-      <textarea className="text-area d-block mb-2" {...field} {...props} />
+      <textarea className="text-area d-block mb-2 form-control" {...field} {...props} />
       {meta.touched && meta.error ? (
         <div className="error">{meta.error}</div>
       ) : null}
@@ -35,7 +35,6 @@ const MyTextArea = ({ label, ...props }) => {
 const Modal = ({ setIsOpen, eventData }) => {
   const { getAccessTokenSilently } = useAuth0();
   const [value, onChange] = useState([eventData.start, eventData.end]);
-  const momentobj = moment;
 
   const postEvent = async (event) => {
 
@@ -119,7 +118,7 @@ const Modal = ({ setIsOpen, eventData }) => {
               description: '',
               location: '',
               notifications: [],
-              invitees: [""]
+              invitees: []
             }}
 
             validate={values => {
@@ -157,11 +156,11 @@ const Modal = ({ setIsOpen, eventData }) => {
               <Form>
                 <div className={styles.modalContent}>
                   <div className="mb-2">
-                    <DateTimeRangePicker required={true} onChange={onChange} value={value} />
+                    <DateTimeRangePicker required={true} onChange={onChange} value={value} className="w-100" />
                   </div>
 
-                  <Field type="input" name="name" placeholder="Name" className="d-block" />
-                  <ErrorMessage name="name" component="div" />
+                  <Field type="input" name="name" placeholder="Name" className="d-block form-control" />
+                  <ErrorMessage name="name" component="div" className="text-danger" />
 
                   <MyTextArea
                     name="description"
@@ -170,25 +169,25 @@ const Modal = ({ setIsOpen, eventData }) => {
                     placeholder="Description"
                   />
 
-                  <Field type="input" name="location" placeholder="Location" className="mb-2 d-block" />
+                  <Field type="input" name="location" placeholder="Location" className="mb-2 d-block form-control" />
 
                   <FieldArray name="invitees">
                     {({ push, remove }) => (
                       <div>
                         {values.invitees.map((email, index) => (
-                          <div key={index} className={styles.multiAddContainer}>
+                          <div key={index} className="d-flex">
                             <Field name={`invitees.${index}`}
                               autoComplete="off"
-                              className="mb-2 pull-left"
+                              className="pull-left form-control d-inline-block"
                               placeholder="Invitee email" />
-                            <ErrorMessage name={`invitees.${index}`} />
-                            <button type="button" className="m-1" onClick={() => remove(index)}>
-                              Remove
+                            <ErrorMessage name={`invitees.${index}`} component="div" className="text-danger" />
+                            <button type="button" className="m-1 btn btn-danger btn-sm rounded d-inline-block" onClick={() => remove(index)}>
+                              <FontAwesomeIcon icon={faTrash}></FontAwesomeIcon>
                             </button>
                           </div>
                         ))}
-                        <button type="button" className="mb-2" onClick={() => push("")}>
-                          Add another email
+                        <button type="button" className="m-1 btn btn-outline-info btn-sm rounded" onClick={() => push("")}>
+                        <FontAwesomeIcon icon={faPlus}></FontAwesomeIcon> Add invitee
                         </button>
                       </div>
                     )}
@@ -198,10 +197,10 @@ const Modal = ({ setIsOpen, eventData }) => {
                     {({ push, remove }) => (
                       <div>
                         {values.notifications.map((select, index) => (
-                          <div key={index} className={styles.multiAddContainer}>
+                          <div key={index} className="d-flex">
                             <Field name={`notifications.${index}`}>
                               {({ field }) => (
-                                <select {...field}>
+                                <select {...field} className="form-control d-inline-block">
                                   <option value="0">On time</option>
                                   <option value="30">30 mins before</option>
                                   <option value="60">1 hour before</option>
@@ -209,14 +208,13 @@ const Modal = ({ setIsOpen, eventData }) => {
                                 </select>
                               )}
                             </Field>
-                            <ErrorMessage name={`notifications.${index}`} />
-                            <button type="button" className="m-1" onClick={() => remove(index)}>
-                              Remove
+                            <button type="button" className="m-1 btn btn-danger btn-sm rounded d-inline-block" onClick={() => remove(index)}>
+                              <FontAwesomeIcon icon={faTrash}></FontAwesomeIcon>
                             </button>
                           </div>
                         ))}
-                        <button type="button" className="mt-1" onClick={() => push("0")}>
-                          Add notification
+                        <button type="button" className="mt-1 btn btn-outline-info btn-sm rounded" onClick={() => push("0")}>
+                        <FontAwesomeIcon icon={faPlus}></FontAwesomeIcon> Add notification
                         </button>
                       </div>
                     )}
@@ -225,13 +223,13 @@ const Modal = ({ setIsOpen, eventData }) => {
 
                 </div>
                 <div className={styles.modalActions}>
-                  <div className={styles.actionsContainer}>
-                    <button className={styles.deleteBtn} disabled={isSubmitting}
+                  <div className="d-flex justify-content-center">
+                    <button className="btn btn-primary m-2 rounded" disabled={isSubmitting}
                       type="submit">
                       Schedule
                     </button>
                     <button
-                      className={styles.cancelBtn}
+                      className="btn btn-outline-dark m-2 rounded"
                       onClick={() => setIsOpen(false)}>
                       Cancel
                     </button>

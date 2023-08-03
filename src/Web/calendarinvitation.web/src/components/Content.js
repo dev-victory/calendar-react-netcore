@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import {useHistory} from 'react-router-dom';
 
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
@@ -11,7 +12,7 @@ const Content = () => {
   const apiOrigin = "http://localhost:5020"; // TODO move to config
   const { user } = useAuth0();
   const { getAccessTokenSilently } = useAuth0();
-
+  const history = useHistory();
   const [isOpen, setIsOpen] = useState(false);
 
   const [eventData, setEventData] = useState({
@@ -63,8 +64,7 @@ const Content = () => {
   };
 
   const onDoubleClickEvent = useCallback((calEvent) => {
-    // TODO: add event details modal with ability to update/delete
-    window.alert(JSON.stringify(calEvent))
+    history.push(`/event-details/${calEvent.id}`);
   }, []);
 
   const openAddEventModal = useCallback(({ start, end }) => {

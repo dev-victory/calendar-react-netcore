@@ -8,6 +8,8 @@ import Footer from "./components/Footer";
 import Home from "./views/Home";
 import Profile from "./views/Profile";
 import ExternalApi from "./views/ExternalApi";
+import EventDetails from "./views/EventDetails";
+
 import { useAuth0 } from "@auth0/auth0-react";
 import history from "./utils/history";
 
@@ -16,6 +18,7 @@ import "./App.css";
 
 // fontawesome
 import initFontAwesome from "./utils/initFontAwesome";
+
 initFontAwesome();
 
 const App = () => {
@@ -38,6 +41,7 @@ const App = () => {
             <Route path="/" exact component={Home} />
             <Route path="/profile" component={Profile} />
             <Route path="/external-api" component={ExternalApi} />
+            <Route path="/event-details/:eventid" component={EventDetails} />
           </Switch>
         </Container>
         <Footer />

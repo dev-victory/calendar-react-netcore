@@ -22,11 +22,11 @@ namespace EventService.Api.Controllers
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
+        // TODO: add user context manager
         [HttpGet("{userId}", Name = "GetEventsByUser")]
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId()
         {
-            // TODO: add user context manager
             var userId = User.Claims.FirstOrDefault(x=> x.Type == ClaimTypes.NameIdentifier)?.Value;
 
             var query = new GetEventListQuery(userId);
@@ -35,15 +35,19 @@ namespace EventService.Api.Controllers
             return Ok(events);
         }
 
-        // TODO: check user Id for security?
+        // TODO: 
+        // 1. add user context manager
+        // 2. handle conditions in application layer
         [HttpGet("[action]/{eventId}", Name = "GetEventById")]
         [ProducesResponseType(typeof(EventVm), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
         {
+            
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
             var query = new GetEventByIdQuery(eventId);
             var eventDetails = await _mediator.Send(query);
-            // TODO: handle this in application layer
-            if (eventDetails != null && eventDetails.CreatedBy != "abc123456") 
+
+            if (eventDetails != null && eventDetails.CreatedBy != userId) 
             {
                 return Forbid("You don't have access to this event");
             }
@@ -56,17 +60,19 @@ namespace EventService.Api.Controllers
         // PUT method - update existing event with new values
 
 
-        // TODO: validate incoming payload in application layer
+        // TODO: 
+        // 1. validate incoming payload in application layer
+        // 2. why isn't createdby being set for notifications and invitations table?
+        // 3. add user context manager
         [HttpPost]
-        [ProducesResponseType(typeof(Guid), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Guid), (int)HttpStatusCode.Created)]
         public async Task<ActionResult<Guid>> CreateEvent([FromBody] CreateEventCommand command)
         {
-            // TODO: add user context manager
             var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
             command.CreatedBy = userId;
             var eventId = await _mediator.Send(command);
 
-            return Ok(eventId);
+            return Created("", eventId);
         }
     }
 }

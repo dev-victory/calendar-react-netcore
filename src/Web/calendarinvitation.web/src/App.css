@@ -37,3 +37,7 @@
 .rbc-row-content {
   z-index: 0;
 }
+
+.react-datetimerange-picker__wrapper {
+  border-radius: 5px !important;
+}
