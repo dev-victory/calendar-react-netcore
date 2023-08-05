@@ -13,9 +13,15 @@ using System.Security.Claims;
 namespace EventService.Api.Controllers
 {
 
-    // TODO: IMPORTANT UTC dates - event and notifications
-    // better error handling not found exception error binding to UI
-    // UI - refactor code, DRY, YAGNI
+    /* 
+    TODO: IMPORTANT UTC dates - event and notifications
+    better error handling not found exception error binding to UI
+    UI - refactor code, DRY, YAGNI
+    add user context manager
+    validate incoming payload in application layer
+    handle conditions in application layer
+    */
+
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Policy = "MustBeVerifiedUser")]
@@ -28,7 +34,6 @@ namespace EventService.Api.Controllers
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
-        // TODO: add user context manager
         [HttpGet("{userId}", Name = "GetEventsByUser")]
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId()
@@ -41,9 +46,6 @@ namespace EventService.Api.Controllers
             return Ok(events);
         }
 
-        // TODO: 
-        // 1. add user context manager
-        // 2. handle conditions in application layer
         [HttpGet("[action]/{eventId}", Name = "GetEventById")]
         [ProducesResponseType(typeof(EventVm), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
@@ -71,8 +73,6 @@ namespace EventService.Api.Controllers
             return Ok();
         }
 
-
-        // PUT method - update existing event with new values
         [HttpPut]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         public async Task<ActionResult> UpdateEvent([FromBody] UpdateEventCommand command)
@@ -84,10 +84,6 @@ namespace EventService.Api.Controllers
             return Ok();
         }
 
-        // TODO: 
-        // 1. validate incoming payload in application layer
-        // 2. why isn't createdby being set for notifications and invitations table?
-        // 3. add user context manager
         [HttpPost]
         [ProducesResponseType(typeof(Guid), (int)HttpStatusCode.Created)]
         public async Task<ActionResult<Guid>> CreateEvent([FromBody] CreateEventCommand command)

@@ -8,7 +8,6 @@ import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import '@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
-import moment from "moment";
 
 import { Formik, Form, Field, ErrorMessage, useField, FieldArray } from 'formik';
 
@@ -17,19 +16,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import Loading from "../components/Loading";
 import styles from "../components/Modal.module.css";
+import { convertNotificationToDateTime, apiDateFormat } from '../utils/dates';
 
-// TODO: event details with ability to update/delete
 const EventDetails = () => {
-    const { getAccessTokenSilently } = useAuth0();
-    const history = useHistory();
     // TODO: consider using Portals for a single modal component 
     // - https://legacy.reactjs.org/docs/portals.html
     const apiOrigin = "http://localhost:5020";
+    const { getAccessTokenSilently } = useAuth0();
+    const history = useHistory();
     const params = useParams();
     const [data, setData] = useState(null);
     const [error, setError] = useState(null);
-    //this.props.match.params.eventid
     const [dates, onChange] = useState([new Date(), new Date()]);
+    
     const MyTextArea = ({ label, ...props }) => {
         // useField() returns [formik.getFieldProps(), formik.getFieldMeta()]
         // which we can spread on <input> and alse replace ErrorMessage entirely.
@@ -167,18 +166,6 @@ const EventDetails = () => {
             console.error(error);
         }
     };
-
-
-    // TODO: move to a utility class
-    const convertNotificationToDateTime = (minutesToAdd, startDate) => {
-        var date = new Date(startDate);
-        date.setMinutes((date.getMinutes()) - (parseInt(minutesToAdd)))
-        return apiDateFormat(date.toString());
-    }
-
-    const apiDateFormat = (jsDate) => {
-        return moment.parseZone(jsDate).format("YYYY-MM-DDTHH:mm:ss");
-    }
 
     return <>
         { error && <h1> {error} </h1> }

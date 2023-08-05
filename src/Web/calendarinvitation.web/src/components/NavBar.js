@@ -39,7 +39,7 @@ const NavBar = () => {
     <div className="nav-container">
       <Navbar color="light" light expand="md" container={false}>
         <Container>
-        <a href="/" className="mr-3"><FontAwesomeIcon icon={faCalendarWeek} size="3x"/></a>
+        <a href="/" className="mr-3 text-dark"><FontAwesomeIcon icon={faCalendarWeek} size="3x"/></a>
           <NavbarToggler onClick={toggle} />
           <Collapse isOpen={isOpen} navbar>
             <Nav className="mr-auto" navbar>

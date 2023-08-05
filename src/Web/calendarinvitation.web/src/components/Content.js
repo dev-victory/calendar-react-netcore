@@ -15,17 +15,16 @@ const Content = () => {
   const history = useHistory();
   const [isOpen, setIsOpen] = useState(false);
   const [reloadCalendar, setCalendarReload] = useState(false);
+  
   const [eventData, setEventData] = useState({
     start: '',
     end: ''
   });
-
   const [state, setState] = useState({
     events: [],
     apiMessage: "",
     error: null
   });
-
 
   useEffect(() => {
     getAllEvents(user.sub);

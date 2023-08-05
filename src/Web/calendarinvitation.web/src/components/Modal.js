@@ -3,12 +3,13 @@ import styles from "./Modal.module.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWindowClose, faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { useAuth0 } from "@auth0/auth0-react";
-import moment from "moment";
 
 import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import '@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
+
+import { convertNotificationToDateTime, apiDateFormat } from '../utils/dates';
 
 import { Formik, Form, Field, ErrorMessage, useField, FieldArray } from 'formik';
 
@@ -28,18 +29,6 @@ const MyTextArea = ({ label, ...props }) => {
     </>
   );
 };
-
-
-// move to utility class
-const convertNotificationToDateTime = (minutesToAdd, startDate) => {
-  var date = new Date(startDate);
-  date.setMinutes((date.getMinutes()) - (parseInt(minutesToAdd)))
-  return apiDateFormat(date.toString());
-}
-
-const apiDateFormat = (jsDate) => {
-  return moment.parseZone(jsDate).format("YYYY-MM-DDTHH:mm:ss");
-}
 
 const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
   const { getAccessTokenSilently } = useAuth0();

@@ -23,8 +23,10 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             ILogger<UpdateEventCommandHandler> logger)
         {
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
-            _eventInvitationRepository = eventInvitationRepository ?? throw new ArgumentNullException(nameof(eventInvitationRepository));
-            _eventNotificationRepository = eventNotificationRepository ?? throw new ArgumentNullException(nameof(eventNotificationRepository));
+            _eventInvitationRepository = eventInvitationRepository 
+                ?? throw new ArgumentNullException(nameof(eventInvitationRepository));
+            _eventNotificationRepository = eventNotificationRepository
+                ?? throw new ArgumentNullException(nameof(eventNotificationRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -52,8 +54,10 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
 
             var taskList = new List<Task>();
-            var notificationsToAdd = mappedEntity.Notifications.ExceptBy(eventEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-            var notificationsToRemove = eventEntity.Notifications.ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+            var notificationsToAdd = mappedEntity.Notifications
+                .ExceptBy(eventEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+            var notificationsToRemove = eventEntity.Notifications
+                .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
 
             foreach (var item in notificationsToAdd)
             {
@@ -68,8 +72,10 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                 taskList.Add(_eventNotificationRepository.DeleteAsync(item));
             }
 
-            var inviteesToAdd = mappedEntity.Invitees.ExceptBy(eventEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
-            var inviteesToRemove = eventEntity.Invitees.ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+            var inviteesToAdd = mappedEntity.Invitees
+                .ExceptBy(eventEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+            var inviteesToRemove = eventEntity.Invitees
+                .ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
 
             foreach (var item in inviteesToAdd)
             {
