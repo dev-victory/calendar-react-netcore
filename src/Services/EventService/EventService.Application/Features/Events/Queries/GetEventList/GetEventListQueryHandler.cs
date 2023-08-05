@@ -19,7 +19,9 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
         public async Task<List<EventVm>> Handle(GetEventListQuery request, CancellationToken cancellationToken)
         {
             var eventList = await _eventRepository.GetEvents(request.UserId);
-            return _mapper.Map<List<EventVm>>(eventList);
+            var filterDeletedEvents = eventList.Where(e => !e.IsDeleted);
+
+            return _mapper.Map<List<EventVm>>(filterDeletedEvents);
         }
     }
 }

@@ -17,8 +17,6 @@ import { Formik, Form, Field, ErrorMessage, useField, FieldArray } from 'formik'
 const apiOrigin = "http://localhost:5020";
 
 const MyTextArea = ({ label, ...props }) => {
-  // useField() returns [formik.getFieldProps(), formik.getFieldMeta()]
-  // which we can spread on <input> and alse replace ErrorMessage entirely.
   const [field, meta] = useField(props);
   return (
     <>
@@ -32,9 +30,23 @@ const MyTextArea = ({ label, ...props }) => {
 };
 
 
-const Modal = ({ setIsOpen, eventData }) => {
+// move to utility class
+const convertNotificationToDateTime = (minutesToAdd, startDate) => {
+  var date = new Date(startDate);
+  date.setMinutes((date.getMinutes()) - (parseInt(minutesToAdd)))
+  return apiDateFormat(date.toString());
+}
+
+const apiDateFormat = (jsDate) => {
+  return moment.parseZone(jsDate).format("YYYY-MM-DDTHH:mm:ss");
+}
+
+const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
   const { getAccessTokenSilently } = useAuth0();
-  const [value, onChange] = useState([eventData.start, eventData.end]);
+  const start = apiDateFormat(eventData.start);
+  const end = apiDateFormat(eventData.end);
+
+  const [dates, onChange] = useState([start, end]);
 
   const postEvent = async (event) => {
 
@@ -42,8 +54,8 @@ const Modal = ({ setIsOpen, eventData }) => {
       const token = await getAccessTokenSilently();
 
       const body = {
-        startDate: apiDateFormat(value[0]),
-        endDate: apiDateFormat(value[1]),
+        startDate: apiDateFormat(dates[0]),
+        endDate: apiDateFormat(dates[1]),
         name: event.name,
         description: event.description,
         location: event.location,
@@ -59,15 +71,9 @@ const Modal = ({ setIsOpen, eventData }) => {
       }
       if (event.notifications) {
         body.notifications = event.notifications
-          // remove duplicates
-          .reduce((acc, curr) => {
-            if (!acc.includes(curr))
-              acc.push(curr);
-            return acc;
-          }, [])
           .map((n) => {
             return {
-              notificationDate: convertNotificationToDateTime(n, value[0])
+              notificationDate: convertNotificationToDateTime(n, dates[0])
             }
           });
       }
@@ -90,16 +96,6 @@ const Modal = ({ setIsOpen, eventData }) => {
     }
   };
 
-  const convertNotificationToDateTime = (minutesToAdd, startDate) => {
-    var date = new Date(startDate);
-    date.setMinutes((date.getMinutes()) - (parseInt(minutesToAdd)))
-    return apiDateFormat(date.toString());
-  }
-
-  const apiDateFormat = (jsDate) => {
-    return moment.parseZone(jsDate).format("YYYY-MM-DDTHH:mm:ss");
-  }
-
   return (
     <>
       <div className={styles.darkBG} onClick={() => setIsOpen(false)} />
@@ -111,7 +107,6 @@ const Modal = ({ setIsOpen, eventData }) => {
           <button className={styles.closeBtn} onClick={() => setIsOpen(false)}>
             <FontAwesomeIcon icon={faWindowClose} />
           </button>
-
           <Formik
             initialValues={{
               name: '',
@@ -148,6 +143,7 @@ const Modal = ({ setIsOpen, eventData }) => {
                   .then(() => {
                     setSubmitting(false);
                     setIsOpen(false);
+                    setCalendarReload(true);
                   });
               }, 400);
             }}
@@ -156,7 +152,7 @@ const Modal = ({ setIsOpen, eventData }) => {
               <Form>
                 <div className={styles.modalContent}>
                   <div className="mb-2">
-                    <DateTimeRangePicker required={true} onChange={onChange} value={value} className="w-100" />
+                    <DateTimeRangePicker required={true} onChange={onChange} value={dates} className="w-100" format={'dd MMM yyyy hh:mm a'} />
                   </div>
 
                   <Field type="input" name="name" placeholder="Name" className="d-block form-control" />
@@ -187,7 +183,7 @@ const Modal = ({ setIsOpen, eventData }) => {
                           </div>
                         ))}
                         <button type="button" className="m-1 btn btn-outline-info btn-sm rounded" onClick={() => push("")}>
-                        <FontAwesomeIcon icon={faPlus}></FontAwesomeIcon> Add invitee
+                          <FontAwesomeIcon icon={faPlus}></FontAwesomeIcon> Add invitee
                         </button>
                       </div>
                     )}
@@ -214,7 +210,7 @@ const Modal = ({ setIsOpen, eventData }) => {
                           </div>
                         ))}
                         <button type="button" className="mt-1 btn btn-outline-info btn-sm rounded" onClick={() => push("0")}>
-                        <FontAwesomeIcon icon={faPlus}></FontAwesomeIcon> Add notification
+                          <FontAwesomeIcon icon={faPlus}></FontAwesomeIcon> Add notification
                         </button>
                       </div>
                     )}

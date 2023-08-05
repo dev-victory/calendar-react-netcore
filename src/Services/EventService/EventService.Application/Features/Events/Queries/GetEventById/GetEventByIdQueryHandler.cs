@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using EventService.Application.Exceptions;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
 using MediatR;
@@ -19,9 +20,9 @@ namespace EventService.Application.Features.Events.Queries.GetEventById
         public async Task<EventVm> Handle(GetEventByIdQuery request, CancellationToken cancellationToken)
         {
             var eventDetails = await _eventRepository.GetEvent(request.EventId);
-            if (eventDetails == null) 
+            if (eventDetails == null || eventDetails.IsDeleted) 
             {
-                //throw new NotFoundException();
+                throw new NotFoundException($"Event with Id {request.EventId} was not found");
             }
 
             return _mapper.Map<EventVm>(eventDetails);

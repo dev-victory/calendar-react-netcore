@@ -12,6 +12,10 @@ using System.Security.Claims;
 
 namespace EventService.Api.Controllers
 {
+
+    // TODO: IMPORTANT UTC dates - event and notifications
+    // better error handling not found exception error binding to UI
+    // UI - refactor code, DRY, YAGNI
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Policy = "MustBeVerifiedUser")]
@@ -57,15 +61,12 @@ namespace EventService.Api.Controllers
             return Ok(eventDetails);
         }
 
-        // DELETE method - remember to create and set isDeleted column in events
-        [HttpDelete]
+        // TODO: check permissions if creator is deleting?
+        [HttpDelete("[action]/{eventId}", Name = "Delete")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
-        public async Task<ActionResult> DeleteEvent([FromBody] DeleteEventCommand command)
+        public async Task<ActionResult> Delete(Guid eventId)
         {
-            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-            
-            // TODO: check permissions if creator is deleting?
-            await _mediator.Send(command);
+            await _mediator.Send(new DeleteEventCommand { EventId = eventId });
 
             return Ok();
         }

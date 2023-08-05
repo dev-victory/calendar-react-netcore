@@ -8,6 +8,7 @@ import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import '@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
+import moment from "moment";
 
 import { Formik, Form, Field, ErrorMessage, useField, FieldArray } from 'formik';
 
@@ -25,15 +26,10 @@ const EventDetails = () => {
     // - https://legacy.reactjs.org/docs/portals.html
     const apiOrigin = "http://localhost:5020";
     const params = useParams();
-    const [data, setData] = useState({
-        name: '',
-        description: '',
-        location: '',
-        notifications: [],
-        invitees: []
-    });
+    const [data, setData] = useState(null);
+    const [error, setError] = useState(null);
     //this.props.match.params.eventid
-    const [value, onChange] = useState([new Date(), new Date()]);
+    const [dates, onChange] = useState([new Date(), new Date()]);
     const MyTextArea = ({ label, ...props }) => {
         // useField() returns [formik.getFieldProps(), formik.getFieldMeta()]
         // which we can spread on <input> and alse replace ErrorMessage entirely.
@@ -66,6 +62,12 @@ const EventDetails = () => {
 
             const responseData = await response.json();
 
+            if (responseData.errors)
+            {
+                setError('Event not found');
+                throw `Error occurred fetching event details`;
+            }
+
             // date range picker re-initialize
             onChange([responseData.startDate, responseData.endDate]);
 
@@ -84,10 +86,11 @@ const EventDetails = () => {
 
             if (responseData.notifications) {
                 mappedValues.notifications = responseData.notifications.map((n) => {
-                    const startDateMinutes = new Date(value[0]).getMinutes();
-                    const notificationMinutes = new Date(n.notificationDate).getMinutes();
-                    const diff = notificationMinutes - startDateMinutes;
-                    return diff.toString();
+                    const startDateMinutes = (new Date(responseData.startDate)).getTime();
+                    const notificationMinutes = (new Date(n.notificationDate)).getTime();
+                    var diff = (notificationMinutes - startDateMinutes) / 1000;
+                    diff /= 60;
+                    return Math.abs(Math.round(diff)).toString();
                 })
             }
 
@@ -98,9 +101,89 @@ const EventDetails = () => {
         }
     }
 
-    return <>
-        <h1 className="mb-2"><FontAwesomeIcon icon={faEdit} /> Manage Event</h1>
+    const updateEvent = async (event) => {
 
+        try {
+            const token = await getAccessTokenSilently();
+
+            const body = {
+                eventid: params.eventid,
+                startDate: apiDateFormat(dates[0]),
+                endDate: apiDateFormat(dates[1]),
+                name: event.name,
+                description: event.description,
+                location: event.location,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+            };
+
+            if (event.invitees) {
+                body.invitees = event.invitees.map((i) => {
+                    return {
+                        inviteeEmailId: i
+                    }
+                });
+            }
+            if (event.notifications) {
+                body.notifications = event.notifications
+                    .map((n) => {
+                        return {
+                            notificationDate: convertNotificationToDateTime(n, dates[0])
+                        }
+                    });
+            }
+
+            const response = await fetch(`${apiOrigin}/Event`, {
+                method: 'PUT',
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body)
+            });
+
+            const responseData = await response.json();
+
+            console.log(responseData);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const deleteEvent = async () => {
+        try {
+            const token = await getAccessTokenSilently();
+
+            await fetch(`${apiOrigin}/Event/Delete/${params.eventid}`, {
+                method: 'DELETE',
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            history.push('/');
+
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+
+    // TODO: move to a utility class
+    const convertNotificationToDateTime = (minutesToAdd, startDate) => {
+        var date = new Date(startDate);
+        date.setMinutes((date.getMinutes()) - (parseInt(minutesToAdd)))
+        return apiDateFormat(date.toString());
+    }
+
+    const apiDateFormat = (jsDate) => {
+        return moment.parseZone(jsDate).format("YYYY-MM-DDTHH:mm:ss");
+    }
+
+    return <>
+        { error && <h1> {error} </h1> }
+        
+        {data && (
         <Formik
             initialValues={data}
             enableReinitialize={true}
@@ -127,15 +210,19 @@ const EventDetails = () => {
             }}
             onSubmit={(values, { setSubmitting }) => {
                 setTimeout(() => {
-                    // PUT
+                    updateEvent(values).then(() => {
+                        setSubmitting(false);
+                        alert('Event updated successfully!');
+                    });
                 }, 400);
             }}
         >
             {({ isSubmitting, values }) => (
                 <Form>
+                    <h1 className="mb-2"><FontAwesomeIcon icon={faEdit} /> Manage Event</h1>
                     <div className={styles.modalContent}>
                         <div className="mb-2 w-100 d-flex">
-                            <DateTimeRangePicker required={true} className="pull-left" onChange={onChange} value={value} />
+                            <DateTimeRangePicker required={true} className="pull-left" onChange={onChange} value={dates} format={'dd MMM yyyy hh:mm a'} />
                         </div>
                         <div className="mb-2 w-100 d-flex">
                             <Field type="input" name="name" placeholder="Name" className="d-block form-control" />
@@ -229,7 +316,7 @@ const EventDetails = () => {
                                 Cancel
                             </button>
                             <button className="btn btn-danger rounded m-2" disabled={isSubmitting}
-                                type="button">
+                                type="button" onClick={() => { if (window.confirm('Are you sure you want to delete this event?')) deleteEvent() }}>
                                 Delete
                             </button>
                         </div>
@@ -237,6 +324,7 @@ const EventDetails = () => {
                 </Form>
             )}
         </Formik >
+        )}
     </>
 }
 

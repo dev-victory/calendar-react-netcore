@@ -16,6 +16,8 @@ namespace EventService.Infrastructure
 
             services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
             services.AddScoped<IEventRepository, EventRepository>();
+            services.AddScoped<IEventInvitationRepository, EventInvitationRepository>();
+            services.AddScoped<IEventNotificationRepository, EventNotificationRepository>();
 
             return services;
         }

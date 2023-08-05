@@ -14,7 +14,7 @@ const Content = () => {
   const { getAccessTokenSilently } = useAuth0();
   const history = useHistory();
   const [isOpen, setIsOpen] = useState(false);
-
+  const [reloadCalendar, setCalendarReload] = useState(false);
   const [eventData, setEventData] = useState({
     start: '',
     end: ''
@@ -29,7 +29,7 @@ const Content = () => {
 
   useEffect(() => {
     getAllEvents(user.sub);
-  }, []);
+  }, [reloadCalendar]);
 
   const getAllEvents = async (userId) => {
     try {
@@ -88,7 +88,7 @@ const Content = () => {
         selectable
         style={{ height: "70vh", marginBottom: "2vh" }}
       />
-      {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} />}
+      {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} setCalendarReload={setCalendarReload} />}
     </>
   );
 }

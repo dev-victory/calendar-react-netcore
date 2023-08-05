@@ -48,6 +48,42 @@
       //  "AuthenticationProviderKey": "Bearer",
       //  "AllowedScopes": []
       //}
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Event",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5100"
+        }
+      ],
+      "UpstreamPathTemplate": "/Event",
+      "UpstreamHttpMethod": [ "PUT" ],
+      "RateLimitOptions": {
+        "EnableRateLimiting": true,
+        "Period": "3s",
+        "PeriodTimespan": 1,
+        "Limit": 1
+      }
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/Event/Delete/{id}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "localhost",
+          "Port": "5100"
+        }
+      ],
+      "UpstreamPathTemplate": "/Event/Delete/{id}",
+      "UpstreamHttpMethod": [ "DELETE" ],
+      "RateLimitOptions": {
+        "EnableRateLimiting": true,
+        "Period": "3s",
+        "PeriodTimespan": 1,
+        "Limit": 1
+      }
     }
   ],
   "GlobalConfiguration": {
