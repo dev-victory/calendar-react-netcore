@@ -1,4 +1,6 @@
 ﻿using EventService.Application.Persistence;
+using EventService.Application.Services;
+using EventService.Infrastructure.EventProducers;
 using EventService.Infrastructure.Persistence;
 using EventService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
@@ -18,6 +20,7 @@ namespace EventService.Infrastructure
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IEventInvitationRepository, EventInvitationRepository>();
             services.AddScoped<IEventNotificationRepository, EventNotificationRepository>();
+            services.AddSingleton<IMessageProducerService, MessageProducerService>();
 
             return services;
         }
