@@ -12,7 +12,6 @@ using System.Security.Claims;
 
 namespace EventService.Api.Controllers
 {
-
     /* 
     TODO: IMPORTANT UTC dates - event and notifications
     better error handling not found exception error binding to UI
