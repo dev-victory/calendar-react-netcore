@@ -12,6 +12,7 @@ namespace EventService.Domain.Entities
         public string Location { get; set; }
         public EventStatus Status { get; set; }
         public string Timezone { get; set; }
+        public bool IsDeleted { get; set; } = false;
         public ICollection<EventInvitation> Invitees { get; set; } = new List<EventInvitation>();
         public ICollection<EventNotification> Notifications { get; set; } = new List<EventNotification>();
     }

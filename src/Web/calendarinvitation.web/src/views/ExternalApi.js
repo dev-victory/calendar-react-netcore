@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+
 import { Button, Alert } from "reactstrap";
 import Highlight from "../components/Highlight";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
@@ -13,7 +14,7 @@ export const ExternalApiComponent = () => {
   const [state, setState] = useState({
     showResult: false,
     apiMessage: "",
-    error: null,
+    error: null
   });
 
   const {

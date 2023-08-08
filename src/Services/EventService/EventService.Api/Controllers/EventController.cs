@@ -1,4 +1,6 @@
 ﻿using EventService.Application.Features.Events.Commands.CreateEvent;
+using EventService.Application.Features.Events.Commands.DeleteEvent;
+using EventService.Application.Features.Events.Commands.UpdateEvent;
 using EventService.Application.Features.Events.Queries.GetEventById;
 using EventService.Application.Features.Events.Queries.GetEventList;
 using EventService.Application.Models;
@@ -6,9 +8,19 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Security.Claims;
 
 namespace EventService.Api.Controllers
 {
+    /* 
+    TODO: IMPORTANT UTC dates - event and notifications
+    better error handling not found exception error binding to UI
+    UI - refactor code, DRY, YAGNI
+    add user context manager
+    validate incoming payload in application layer
+    handle conditions in application layer
+    */
+
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Policy = "MustBeVerifiedUser")]
@@ -25,22 +37,24 @@ namespace EventService.Api.Controllers
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId()
         {
-            // TODO: get userId from claims
-            var query = new GetEventListQuery("abc123456");
+            var userId = User.Claims.FirstOrDefault(x=> x.Type == ClaimTypes.NameIdentifier)?.Value;
+
+            var query = new GetEventListQuery(userId);
             var events = await _mediator.Send(query);
 
             return Ok(events);
         }
 
-        // TODO: check user Id for security?
         [HttpGet("[action]/{eventId}", Name = "GetEventById")]
         [ProducesResponseType(typeof(EventVm), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
         {
+            
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
             var query = new GetEventByIdQuery(eventId);
             var eventDetails = await _mediator.Send(query);
-            // TODO: handle this in application layer
-            if (eventDetails != null && eventDetails.CreatedBy != "abc123456") 
+
+            if (eventDetails != null && eventDetails.CreatedBy != userId) 
             {
                 return Forbid("You don't have access to this event");
             }
@@ -48,15 +62,36 @@ namespace EventService.Api.Controllers
             return Ok(eventDetails);
         }
 
-        // TODO: validate incoming payload in application layer
+        // TODO: check permissions if creator is deleting?
+        [HttpDelete("[action]/{eventId}", Name = "Delete")]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public async Task<ActionResult> Delete(Guid eventId)
+        {
+            await _mediator.Send(new DeleteEventCommand { EventId = eventId });
+
+            return Ok();
+        }
+
+        [HttpPut]
+        [ProducesResponseType((int)HttpStatusCode.OK)]
+        public async Task<ActionResult> UpdateEvent([FromBody] UpdateEventCommand command)
+        {
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            command.ModifiedBy = userId;
+            await _mediator.Send(command);
+
+            return Ok();
+        }
+
         [HttpPost]
-        [ProducesResponseType(typeof(Guid), (int)HttpStatusCode.OK)]
+        [ProducesResponseType(typeof(Guid), (int)HttpStatusCode.Created)]
         public async Task<ActionResult<Guid>> CreateEvent([FromBody] CreateEventCommand command)
         {
-            command.CreatedBy = "abc123456"; // TODO: add user ID from claims
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            command.CreatedBy = userId;
             var eventId = await _mediator.Send(command);
 
-            return Ok(eventId);
+            return Created("/Event/GetEventById/", eventId);
         }
     }
 }

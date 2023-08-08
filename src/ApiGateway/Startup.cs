@@ -21,6 +21,18 @@ namespace ApiGateway
 
             services.AddOcelot()
                 .AddCacheManager(settings => settings.WithDictionaryHandle());
+
+            services.AddCors((options) => 
+            {
+                options.AddPolicy("AllowClient", policy => 
+                {
+                    // TODO change this
+                    policy
+                    .WithOrigins(new string[] { "http://localhost:3000" })
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,6 +52,8 @@ namespace ApiGateway
                     await context.Response.WriteAsync("Hello from Calendar Invite API gateway!");
                 });
             });
+
+            app.UseCors("AllowClient");
 
             await app.UseOcelot();
         }
