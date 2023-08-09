@@ -82,33 +82,31 @@ namespace EventService.Infrastructure.Repositories
         {
             var eventEntity = await GetEvent(mappedEntity.EventId);
 
-            // distinct by invitees and notifications only
-            mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(car => car.InviteeEmailId)
-              .Select(g => g.First())
-              .ToList();
-            mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(car => car.NotificationDate)
-              .Select(g => g.First())
-            .ToList();
-
-            eventEntity.StartDate = mappedEntity.StartDate;
-            eventEntity.EndDate = mappedEntity.EndDate;
-            eventEntity.Location = mappedEntity.Location;
-            eventEntity.Description = mappedEntity.Description;
-            eventEntity.Timezone = mappedEntity.Timezone;
-            eventEntity.Name = mappedEntity.Name;
-            eventEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
-
-
-            var taskList = new List<Task>();
-            var notificationsToAdd = mappedEntity.Notifications
-                .ExceptBy(eventEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-            var notificationsToRemove = eventEntity.Notifications
-                .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-
             using var transaction = _dbContext.Database.BeginTransaction();
 
             try
             {
+                // distinct by invitees and notifications only
+                mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(car => car.InviteeEmailId)
+                    .Select(g => g.First()).ToList();
+                mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(car => car.NotificationDate)
+                    .Select(g => g.First()).ToList();
+
+                eventEntity.StartDate = mappedEntity.StartDate;
+                eventEntity.EndDate = mappedEntity.EndDate;
+                eventEntity.Location = mappedEntity.Location;
+                eventEntity.Description = mappedEntity.Description;
+                eventEntity.Timezone = mappedEntity.Timezone;
+                eventEntity.Name = mappedEntity.Name;
+                eventEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
+
+
+                var taskList = new List<Task>();
+                var notificationsToAdd = mappedEntity.Notifications
+                    .ExceptBy(eventEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+                var notificationsToRemove = eventEntity.Notifications
+                    .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+
                 foreach (var item in notificationsToAdd)
                 {
                     item.EventId = eventEntity.Id;

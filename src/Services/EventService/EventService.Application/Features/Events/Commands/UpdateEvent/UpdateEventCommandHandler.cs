@@ -33,6 +33,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
             try
             {
+                mappedEntity.LastModifiedBy = request.ModifiedBy;
                 await _eventRepository.UpdateEvent(mappedEntity);
             }
             catch (DatabaseException dbEx)
