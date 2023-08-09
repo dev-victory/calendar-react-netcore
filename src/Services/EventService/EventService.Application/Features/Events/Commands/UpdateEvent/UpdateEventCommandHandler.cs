@@ -11,14 +11,11 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
     public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand>
     {
         private readonly IEventRepository _eventRepository;
-        
         private readonly IMapper _mapper;
         private readonly ILogger<UpdateEventCommandHandler> _logger;
 
         public UpdateEventCommandHandler(
             IEventRepository eventRepository,
-            IEventInvitationRepository eventInvitationRepository,
-            IEventNotificationRepository eventNotificationRepository,
             IMapper mapper,
             ILogger<UpdateEventCommandHandler> logger)
         {

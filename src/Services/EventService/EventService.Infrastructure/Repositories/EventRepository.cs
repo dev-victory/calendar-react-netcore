@@ -1,10 +1,9 @@
-﻿using EventService.Application.Persistence;
+﻿using EventService.Application.Exceptions;
+using EventService.Application.Persistence;
 using EventService.Domain.Entities;
 using EventService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
-using EventService.Application.Exceptions;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace EventService.Infrastructure.Repositories
 {
