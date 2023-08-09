@@ -3,21 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.6.33815.320
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalendarInvitation.Auth", "src\Services\Auth\CalendarInvitation.Auth.csproj", "{60FD6837-5278-44EF-9889-3DDB76C1DE6A}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{D68E6DAF-3427-445D-98CC-0104C8565AFD}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Web", "Web", "{C84E2EF5-34E9-4A6A-807E-90749995F0BF}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Auth", "Auth", "{0D431922-8985-4ACD-8D1F-695EDAF7552D}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventService", "EventService", "{DDC43738-1D60-4767-AB58-D8AAE28DBC6E}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotificationService", "NotificationService", "{A838E6AA-3A3F-4A5B-ABE0-84CBEE6147F7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserService", "UserService", "{AEE92F4F-0E29-4F98-8A53-FC692ACE2715}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CalendarInvitation.UserService.Api", "src\Services\UserService\CalendarInvitation.UserService\CalendarInvitation.UserService.Api.csproj", "{392C1218-F159-4B03-89F4-2E19E9B5A71A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventService.Application", "src\Services\EventService\EventService.Application\EventService.Application.csproj", "{D73AC619-690E-46CF-B350-E732289F3355}"
 EndProject
@@ -38,9 +30,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "EventBus", "EventBus", "{9D
 		src\EventBus\kafka-docker-compose.yml = src\EventBus\kafka-docker-compose.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NotificationService", "src\Services\NotificationService\NotificationService.csproj", "{3D66C27F-8EDC-45AF-949A-E1FDB27F1CA1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "NotificationService", "src\Services\NotificationService\NotificationService.csproj", "{3D66C27F-8EDC-45AF-949A-E1FDB27F1CA1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EventBus.Message", "src\EventBus\EventBus.Message\EventBus.Message.csproj", "{8EC5A79D-1942-496F-821E-1BC101F606E3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "EventBus.Message", "src\EventBus\EventBus.Message\EventBus.Message.csproj", "{8EC5A79D-1942-496F-821E-1BC101F606E3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,14 +40,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{60FD6837-5278-44EF-9889-3DDB76C1DE6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{60FD6837-5278-44EF-9889-3DDB76C1DE6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{60FD6837-5278-44EF-9889-3DDB76C1DE6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{60FD6837-5278-44EF-9889-3DDB76C1DE6A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{392C1218-F159-4B03-89F4-2E19E9B5A71A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{392C1218-F159-4B03-89F4-2E19E9B5A71A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{392C1218-F159-4B03-89F4-2E19E9B5A71A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{392C1218-F159-4B03-89F4-2E19E9B5A71A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D73AC619-690E-46CF-B350-E732289F3355}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D73AC619-690E-46CF-B350-E732289F3355}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D73AC619-690E-46CF-B350-E732289F3355}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -95,12 +79,8 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{60FD6837-5278-44EF-9889-3DDB76C1DE6A} = {0D431922-8985-4ACD-8D1F-695EDAF7552D}
-		{0D431922-8985-4ACD-8D1F-695EDAF7552D} = {D68E6DAF-3427-445D-98CC-0104C8565AFD}
 		{DDC43738-1D60-4767-AB58-D8AAE28DBC6E} = {D68E6DAF-3427-445D-98CC-0104C8565AFD}
 		{A838E6AA-3A3F-4A5B-ABE0-84CBEE6147F7} = {D68E6DAF-3427-445D-98CC-0104C8565AFD}
-		{AEE92F4F-0E29-4F98-8A53-FC692ACE2715} = {D68E6DAF-3427-445D-98CC-0104C8565AFD}
-		{392C1218-F159-4B03-89F4-2E19E9B5A71A} = {AEE92F4F-0E29-4F98-8A53-FC692ACE2715}
 		{D73AC619-690E-46CF-B350-E732289F3355} = {DDC43738-1D60-4767-AB58-D8AAE28DBC6E}
 		{ED1E0941-9365-4FD7-AE2E-508ECF7F0861} = {DDC43738-1D60-4767-AB58-D8AAE28DBC6E}
 		{ADFB275C-B1AA-4416-BD47-D2605C46D80C} = {DDC43738-1D60-4767-AB58-D8AAE28DBC6E}

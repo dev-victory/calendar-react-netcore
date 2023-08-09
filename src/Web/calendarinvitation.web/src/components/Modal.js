@@ -81,7 +81,7 @@ const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
 
       console.log(responseData);
     } catch (error) {
-      console.error(error);
+      throw error;
     }
   };
 
@@ -133,6 +133,9 @@ const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
                     setSubmitting(false);
                     setIsOpen(false);
                     setCalendarReload(true);
+                  }, error => {
+                    console.error(error);
+                    alert('An error occurred while saving the event');
                   });
               }, 400);
             }}

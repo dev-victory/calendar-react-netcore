@@ -15,7 +15,11 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
         private readonly IMessageProducerService _messageProducerService;
         private readonly ILogger<CreateEventCommandHandler> _logger;
 
-        public CreateEventCommandHandler(IEventRepository eventRepository, IMapper mapper, IMessageProducerService messageProducerService, ILogger<CreateEventCommandHandler> logger)
+        public CreateEventCommandHandler(
+            IEventRepository eventRepository, 
+            IMapper mapper, 
+            IMessageProducerService messageProducerService, 
+            ILogger<CreateEventCommandHandler> logger)
         {
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));

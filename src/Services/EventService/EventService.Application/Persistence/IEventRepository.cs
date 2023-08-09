@@ -6,5 +6,6 @@ namespace EventService.Application.Persistence
     {
         Task<IEnumerable<Event>> GetEvents(string userId);
         Task<Event> GetEvent(Guid eventId);
+        Task UpdateEvent(Event mappedEvent);
     }
 }
