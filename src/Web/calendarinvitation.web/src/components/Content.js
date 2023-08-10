@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import {useHistory} from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
@@ -10,12 +10,12 @@ import Modal from "./Modal";
 const Content = () => {
   const localizer = momentLocalizer(moment);
   const apiOrigin = "http://localhost:5020"; // TODO move to config
-  const { user } = useAuth0();
   const { getAccessTokenSilently } = useAuth0();
   const history = useHistory();
   const [isOpen, setIsOpen] = useState(false);
   const [reloadCalendar, setCalendarReload] = useState(false);
-  
+  const [isFetchByWeek, setIsFetchByWeek] = useState(true);
+
   const [eventData, setEventData] = useState({
     start: '',
     end: ''
@@ -27,14 +27,14 @@ const Content = () => {
   });
 
   useEffect(() => {
-    getAllEvents(user.sub);
+    getAllEvents();
   }, [reloadCalendar]);
 
-  const getAllEvents = async (userId) => {
+  const getAllEvents = async () => {
     try {
       const token = await getAccessTokenSilently();
 
-      const response = await fetch(`${apiOrigin}/Event/GetEventsByUser/${userId}`, {
+      const response = await fetch(`${apiOrigin}/Event/GetEventsByUser/${isFetchByWeek}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -66,12 +66,16 @@ const Content = () => {
     history.push(`/event-details/${calEvent.id}`);
   }, []);
 
+  const onViewChange = useCallback((view) => {
+    setIsFetchByWeek(view == Views.WEEK);
+    setCalendarReload(true);
+  }, []);
+
   const openAddEventModal = useCallback(({ start, end }) => {
     setEventData({
       start: start.toString(),
       end: end.toString()
     });
-
     setIsOpen(true);
   }, []);
 
@@ -85,6 +89,7 @@ const Content = () => {
         onSelectSlot={openAddEventModal}
         onDoubleClickEvent={onDoubleClickEvent}
         selectable
+        onView={onViewChange}
         style={{ height: "70vh", marginBottom: "2vh" }}
       />
       {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} setCalendarReload={setCalendarReload} />}

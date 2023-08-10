@@ -2,7 +2,7 @@
   "Routes": [
     // Event API
     {
-      "DownstreamPathTemplate": "/api/v1/Event/{userId}",
+      "DownstreamPathTemplate": "/api/v1/Event/{IsFilterByWeek}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -10,9 +10,8 @@
           "Port": "5100"
         }
       ],
-      "UpstreamPathTemplate": "/Event/GetEventsByUser/{userId}",
-      "UpstreamHttpMethod": [ "GET" ],
-      "FileCacheOptions": { "TtlSeconds": 10 }
+      "UpstreamPathTemplate": "/Event/GetEventsByUser/{IsFilterByWeek}",
+      "UpstreamHttpMethod": [ "GET" ]
     },
     {
       "DownstreamPathTemplate": "/api/v1/Event/GetEventById/{id}",
@@ -38,16 +37,11 @@
       "UpstreamPathTemplate": "/Event",
       "UpstreamHttpMethod": [ "POST" ],
       "RateLimitOptions": {
-        //"ClientWhitelist": [],
         "EnableRateLimiting": true,
         "Period": "3s",
         "PeriodTimespan": 1,
         "Limit": 1
       }
-      //"AuthenticationOptions": {
-      //  "AuthenticationProviderKey": "Bearer",
-      //  "AllowedScopes": []
-      //}
     },
     {
       "DownstreamPathTemplate": "/api/v1/Event",

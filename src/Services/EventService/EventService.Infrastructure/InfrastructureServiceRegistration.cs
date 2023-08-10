@@ -16,6 +16,11 @@ namespace EventService.Infrastructure
             services.AddDbContext<EventContext>(options =>
                            options.UseSqlServer(configuration.GetConnectionString("EventConnectionString")));
 
+            services.AddStackExchangeRedisCache(options =>
+            {
+                options.Configuration = configuration.GetSection("CacheSettings:ConnectionString").Value;
+            });
+
             services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IEventInvitationRepository, EventInvitationRepository>();
