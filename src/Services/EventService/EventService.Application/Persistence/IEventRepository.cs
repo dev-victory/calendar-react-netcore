@@ -4,8 +4,8 @@ namespace EventService.Application.Persistence
 {
     public interface IEventRepository : IAsyncRepository<Event>
     {
-        Task<IEnumerable<Event>> GetEvents(string userId);
+        Task<IReadOnlyList<Event>> GetEvents(string userId, bool isFilterByWeek = true);
         Task<Event> GetEvent(Guid eventId);
-        Task UpdateEvent(Event mappedEvent);
+        Task<Event> UpdateEvent(Event mappedEvent);
     }
 }

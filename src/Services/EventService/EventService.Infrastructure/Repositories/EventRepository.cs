@@ -3,6 +3,7 @@ using EventService.Application.Persistence;
 using EventService.Domain.Entities;
 using EventService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Expressions;
 
 namespace EventService.Infrastructure.Repositories
@@ -13,7 +14,8 @@ namespace EventService.Infrastructure.Repositories
         private readonly IEventNotificationRepository _eventNotificationRepository;
 
         public EventRepository(EventContext dbContext,
-            IEventInvitationRepository eventInvitationRepository, IEventNotificationRepository eventNotificationRepository)
+            IEventInvitationRepository eventInvitationRepository, 
+            IEventNotificationRepository eventNotificationRepository)
             : base(dbContext)
         {
             _eventInvitationRepository = eventInvitationRepository
@@ -22,16 +24,38 @@ namespace EventService.Infrastructure.Repositories
                 ?? throw new ArgumentNullException(nameof(eventNotificationRepository));
         }
 
-        public async Task<IEnumerable<Event>> GetEvents(string userId)
+        public async Task<IReadOnlyList<Event>> GetEvents(string userId, bool isFilterByWeek = true)
         {
             var _Type = typeof(Event);
+
             var _Prop = _Type.GetProperty("CreatedBy");
             var _Param = Expression.Parameter(_Type, _Prop.Name);
             var _Left = Expression.PropertyOrField(_Param, _Prop.Name);
             var _Right = Expression.Constant(userId, _Prop.PropertyType);
-            var _Body = Expression.Equal(_Left, _Right);
+
+            // Create an expression for the first condition: CreatedBy == userId
+            var _Body1 = Expression.Equal(_Left, _Right);
+
+            // Get the current date
+            var currentDate = DateTime.UtcNow.Date;
+
+            // Get the start date for the second condition: StartDate >= currentDate - 3 days
+            var startDate = currentDate.AddDays(-3);
+
+            // Get the end date for the third condition: EndDate <= currentDate + 3 days
+            var endDate = currentDate.AddDays(3);
+
+            // Create expressions for the second and third conditions using the same parameter
+            var _Body2 = Expression.GreaterThanOrEqual(Expression.PropertyOrField(_Param, "StartDate"), Expression.Constant(startDate));
+            var _Body3 = Expression.LessThanOrEqual(Expression.PropertyOrField(_Param, "EndDate"), Expression.Constant(endDate));
+
+            // Combine the expressions using AndAlso if isFilterByWeek is true, otherwise use only the first expression
+            var _Body = isFilterByWeek ? Expression.AndAlso(Expression.AndAlso(_Body1, _Body2), _Body3) : _Body1;
+
+            // Create the final lambda expression
             var _Where = Expression.Lambda<Func<Event, bool>>(_Body, _Param);
 
+            // Call the GetAsync method with the expression
             var eventList = await GetAsync(_Where);
 
             return eventList;
@@ -77,7 +101,7 @@ namespace EventService.Infrastructure.Repositories
             return eventDetails;
         }
 
-        public async Task UpdateEvent(Event mappedEntity)
+        public async Task<Event> UpdateEvent(Event mappedEntity)
         {
             var eventEntity = await GetEvent(mappedEntity.EventId);
 
@@ -139,7 +163,10 @@ namespace EventService.Infrastructure.Repositories
 
                 await Task.WhenAll(taskList).ContinueWith(async _ => await UpdateAsync(eventEntity)).Unwrap();
 
+                
                 transaction.Commit();
+
+                return eventEntity;
             }
             catch (DbUpdateException dbEx)
             {

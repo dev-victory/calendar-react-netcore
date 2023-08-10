@@ -13,12 +13,13 @@ using System.Security.Claims;
 namespace EventService.Api.Controllers
 {
     /* 
-    TODO: IMPORTANT UTC dates - event and notifications
-    better error handling not found exception error binding to UI
-    UI - refactor code, DRY, YAGNI
-    add user context manager
-    validate incoming payload in application layer
-    handle conditions in application layer
+    TODO: 
+    - IMPORTANT UTC dates - event and notifications
+    - better error handling not found exception error binding to UI
+    - UI: refactor code, DRY, YAGNI
+    - add user context manager
+    - validate incoming payload in application layer
+    - handle conditions in application layer
     */
 
     [Route("api/v1/[controller]")]
@@ -33,13 +34,14 @@ namespace EventService.Api.Controllers
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
         }
 
-        [HttpGet("{userId}", Name = "GetEventsByUser")]
+        // TODO: send start and end date to search, rather than funny bool
+        [HttpGet("{IsFilterByWeek}", Name = "GetEventsByUser")]
         [ProducesResponseType(typeof(IEnumerable<EventVm>), (int)HttpStatusCode.OK)]
-        public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId()
+        public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId(bool? IsFilterByWeek)
         {
             var userId = User.Claims.FirstOrDefault(x=> x.Type == ClaimTypes.NameIdentifier)?.Value;
 
-            var query = new GetEventListQuery(userId);
+            var query = new GetEventListQuery(userId, IsFilterByWeek ?? true);
             var events = await _mediator.Send(query);
 
             return Ok(events);
@@ -49,7 +51,6 @@ namespace EventService.Api.Controllers
         [ProducesResponseType(typeof(EventVm), (int)HttpStatusCode.OK)]
         public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
         {
-            
             var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
             var query = new GetEventByIdQuery(eventId);
             var eventDetails = await _mediator.Send(query);
