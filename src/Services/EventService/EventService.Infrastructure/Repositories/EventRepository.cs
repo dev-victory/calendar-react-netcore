@@ -3,7 +3,6 @@ using EventService.Application.Persistence;
 using EventService.Domain.Entities;
 using EventService.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Distributed;
 using System.Linq.Expressions;
 
 namespace EventService.Infrastructure.Repositories
@@ -70,7 +69,6 @@ namespace EventService.Infrastructure.Repositories
         //for more information.
         //To identify the query that's triggering this warning call
         //'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'
-
         public async Task<Event> GetEvent(Guid eventId)
         {
             var _Type = typeof(Event);
@@ -101,38 +99,30 @@ namespace EventService.Infrastructure.Repositories
             return eventDetails;
         }
 
-        public async Task<Event> UpdateEvent(Event mappedEntity)
+        public async Task<Event> UpdateEvent(Event mappedEntity, Event dbEntity)
         {
-            var eventEntity = await GetEvent(mappedEntity.EventId);
-
             using var transaction = _dbContext.Database.BeginTransaction();
 
             try
             {
-                // distinct by invitees and notifications only
-                mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(car => car.InviteeEmailId)
-                    .Select(g => g.First()).ToList();
-                mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(car => car.NotificationDate)
-                    .Select(g => g.First()).ToList();
-
-                eventEntity.StartDate = mappedEntity.StartDate;
-                eventEntity.EndDate = mappedEntity.EndDate;
-                eventEntity.Location = mappedEntity.Location;
-                eventEntity.Description = mappedEntity.Description;
-                eventEntity.Timezone = mappedEntity.Timezone;
-                eventEntity.Name = mappedEntity.Name;
-                eventEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
+                dbEntity.StartDate = mappedEntity.StartDate;
+                dbEntity.EndDate = mappedEntity.EndDate;
+                dbEntity.Location = mappedEntity.Location;
+                dbEntity.Description = mappedEntity.Description;
+                dbEntity.Timezone = mappedEntity.Timezone;
+                dbEntity.Name = mappedEntity.Name;
+                dbEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
 
 
                 var taskList = new List<Task>();
                 var notificationsToAdd = mappedEntity.Notifications
-                    .ExceptBy(eventEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-                var notificationsToRemove = eventEntity.Notifications
+                    .ExceptBy(dbEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+                var notificationsToRemove = dbEntity.Notifications
                     .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
 
                 foreach (var item in notificationsToAdd)
                 {
-                    item.EventId = eventEntity.Id;
+                    item.EventId = dbEntity.Id;
                     item.CreatedBy = mappedEntity.LastModifiedBy;
                     item.CreatedDate = DateTime.UtcNow;
                     taskList.Add(_eventNotificationRepository.AddAsync(item));
@@ -144,13 +134,13 @@ namespace EventService.Infrastructure.Repositories
                 }
 
                 var inviteesToAdd = mappedEntity.Invitees
-                    .ExceptBy(eventEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
-                var inviteesToRemove = eventEntity.Invitees
+                    .ExceptBy(dbEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+                var inviteesToRemove = dbEntity.Invitees
                     .ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
 
                 foreach (var item in inviteesToAdd)
                 {
-                    item.EventId = eventEntity.Id;
+                    item.EventId = dbEntity.Id;
                     item.CreatedBy = mappedEntity.LastModifiedBy;
                     item.CreatedDate = DateTime.UtcNow;
                     taskList.Add(_eventInvitationRepository.AddAsync(item));
@@ -161,12 +151,12 @@ namespace EventService.Infrastructure.Repositories
                     taskList.Add(_eventInvitationRepository.DeleteAsync(item));
                 }
 
-                await Task.WhenAll(taskList).ContinueWith(async _ => await UpdateAsync(eventEntity)).Unwrap();
+                await Task.WhenAll(taskList).ContinueWith(async _ => await UpdateAsync(dbEntity)).Unwrap();
 
                 
                 transaction.Commit();
 
-                return eventEntity;
+                return dbEntity;
             }
             catch (DbUpdateException dbEx)
             {

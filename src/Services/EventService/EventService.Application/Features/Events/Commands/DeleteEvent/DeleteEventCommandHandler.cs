@@ -31,6 +31,13 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             try
             {
                 var eventEntity = await _eventRepository.GetEvent(request.EventId);
+
+                if (eventEntity.CreatedBy != request.UserId)
+                {
+                    _logger.LogWarning($"Forbidden: User {request.UserId} doesn't have access to event ID: {request.EventId}");
+                    throw new ForbiddenAccessException();
+                }
+
                 eventEntity.IsDeleted = true;
 
                 await _eventRepository.UpdateAsync(eventEntity);

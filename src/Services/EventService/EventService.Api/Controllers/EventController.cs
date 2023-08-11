@@ -13,15 +13,13 @@ using System.Security.Claims;
 namespace EventService.Api.Controllers
 {
     /* 
-    TODO: 
-    - IMPORTANT UTC dates - event and notifications
-    - better error handling not found exception error binding to UI
-    - UI: refactor code, DRY, YAGNI
+    TODO:
+    - IMPORTANT: check why notification dates are not being set correctly
     - add user context manager
     - validate incoming payload in application layer
     - handle conditions in application layer
-    - redis cache connection error
     - event bus connection error
+    - UI: refactor code, DRY, YAGNI
     */
 
     [Route("api/v1/[controller]")]
@@ -60,12 +58,12 @@ namespace EventService.Api.Controllers
             return Ok(eventDetails);
         }
 
-        // TODO: check permissions if creator is deleting?
         [HttpDelete("[action]/{eventId}", Name = "Delete")]
         [ProducesResponseType((int)HttpStatusCode.OK)]
         public async Task<ActionResult> Delete(Guid eventId)
         {
-            await _mediator.Send(new DeleteEventCommand { EventId = eventId });
+            var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
+            await _mediator.Send(new DeleteEventCommand { EventId = eventId, UserId = userId });
 
             return Ok();
         }

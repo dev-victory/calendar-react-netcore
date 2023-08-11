@@ -6,6 +6,6 @@ namespace EventService.Application.Persistence
     {
         Task<IReadOnlyList<Event>> GetEvents(string userId, bool isFilterByWeek = true);
         Task<Event> GetEvent(Guid eventId);
-        Task<Event> UpdateEvent(Event mappedEvent);
+        Task<Event> UpdateEvent(Event mappedEvent, Event dbEntity);
     }
 }
