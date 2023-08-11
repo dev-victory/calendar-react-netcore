@@ -10,8 +10,9 @@ namespace NotificationService.EventConsumers
     {
         private readonly ConsumerConfig _config;
         private readonly IEmailService _emailService;
+        private readonly ILogger<MessageConsumerService> _logger;
 
-        public MessageConsumerService(IConfiguration config, IEmailService emailService)
+        public MessageConsumerService(IConfiguration config, IEmailService emailService, ILogger<MessageConsumerService> logger)
         {
             _config = new ConsumerConfig
             {
@@ -20,6 +21,7 @@ namespace NotificationService.EventConsumers
                 AutoOffsetReset = AutoOffsetReset.Earliest
             };
             _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task FetchNewEventMessage()
@@ -51,7 +53,7 @@ namespace NotificationService.EventConsumers
                                 var email = new EmailMessage
                                 {
                                     Body = $"You are invited to an event, details: {message.Description}."
-                                           + $"{Environment.NewLine}The event starts on " 
+                                           + $"{Environment.NewLine}The event starts on "
                                            + $"{message.StartDate.ToString("dddd, dd MMMM yyyy")} at "
                                            + $"{message.StartDate.ToString("hh:mm tt")}",
                                     Subject = $"You have been invited to {message.Name}",
@@ -65,11 +67,17 @@ namespace NotificationService.EventConsumers
                     }
                 }
             }
+            catch (ConsumeException ex)
+            {
+                _logger.LogError($"Error while consuming messages from Kafka, details: \n{ex.Message}");
+            }
             catch (Exception ex)
             {
+                _logger.LogError($"An unexpected error occurred, details: \n{ex.Message}");
+            }
+            finally
+            {
                 consumer.Close();
-                Console.WriteLine(ex.Message); // TODO: Logging
-                throw;
             }
         }
     }

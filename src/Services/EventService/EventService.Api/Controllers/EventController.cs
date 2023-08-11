@@ -20,6 +20,8 @@ namespace EventService.Api.Controllers
     - add user context manager
     - validate incoming payload in application layer
     - handle conditions in application layer
+    - redis cache connection error
+    - event bus connection error
     */
 
     [Route("api/v1/[controller]")]
@@ -52,13 +54,8 @@ namespace EventService.Api.Controllers
         public async Task<ActionResult<EventVm>> GetEventById(Guid eventId)
         {
             var userId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-            var query = new GetEventByIdQuery(eventId);
+            var query = new GetEventByIdQuery(eventId, userId);
             var eventDetails = await _mediator.Send(query);
-
-            if (eventDetails != null && eventDetails.CreatedBy != userId) 
-            {
-                return Forbid("You don't have access to this event");
-            }
 
             return Ok(eventDetails);
         }

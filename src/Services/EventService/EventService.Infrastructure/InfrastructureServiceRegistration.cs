@@ -6,6 +6,8 @@ using EventService.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using StackExchange.Redis;
+using System.Net;
 
 namespace EventService.Infrastructure
 {
@@ -18,7 +20,30 @@ namespace EventService.Infrastructure
 
             services.AddStackExchangeRedisCache(options =>
             {
-                options.Configuration = configuration.GetSection("CacheSettings:ConnectionString").Value;
+                options.ConnectionMultiplexerFactory = async () =>
+                {
+                    var conn = configuration.GetSection("CacheSettings:ConnectionString").Value;
+
+                    var configurationOptions = new ConfigurationOptions();
+                    configurationOptions.EndPoints.Add(conn);
+                    configurationOptions.ConnectTimeout = 10000;
+                    configurationOptions.ConnectRetry = 3;
+
+                    // Create and configure your ConnectionMultiplexer here
+                    var connection = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
+                    connection.ConnectionFailed += (sender, args) =>
+                    {
+                        // Handle connection failures here
+                        Console.WriteLine($"Connection failed: {args.Exception}");
+                    };
+                    connection.ConnectionRestored += (sender, args) =>
+                    {
+                        // Handle connection recoveries here
+                        Console.WriteLine($"Connection restored: {args.Exception}");
+                    };
+
+                    return connection;
+                };
             });
 
             services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));

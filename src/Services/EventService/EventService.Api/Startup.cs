@@ -1,5 +1,6 @@
 ﻿using EventService.Api.Authorization;
 using EventService.Application;
+using EventService.Application.Filters;
 using EventService.Infrastructure;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.OpenApi.Models;
@@ -43,7 +44,12 @@ namespace EventService.Api
             });
             #endregion
 
-            services.AddControllers();
+            services.AddControllers(options =>
+            {
+                //options.Filters.Add(typeof(NotFoundExceptionFilter));
+                options.Filters.Add(typeof(CustomExceptionFilter));
+            });
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Event.API", Version = "v1" });

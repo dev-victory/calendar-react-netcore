@@ -67,7 +67,7 @@ const Content = () => {
   }, []);
 
   const onViewChange = useCallback((view) => {
-    setIsFetchByWeek(view == Views.WEEK);
+    setIsFetchByWeek(view === Views.WEEK);
     setCalendarReload(true);
   }, []);
 
@@ -79,22 +79,23 @@ const Content = () => {
     setIsOpen(true);
   }, []);
 
-  return (
-    <>
-      <Calendar
-        localizer={localizer}
-        defaultDate={new Date()}
-        defaultView={Views.WEEK}
-        events={state.events}
-        onSelectSlot={openAddEventModal}
-        onDoubleClickEvent={onDoubleClickEvent}
-        selectable
-        onView={onViewChange}
-        style={{ height: "70vh", marginBottom: "2vh" }}
-      />
-      {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} setCalendarReload={setCalendarReload} />}
-    </>
-  );
+    return (
+      <>
+        <Calendar
+          localizer={localizer}
+          defaultDate={new Date()}
+          defaultView={Views.WEEK}
+          events={state.events}
+          onSelectSlot={openAddEventModal}
+          onDoubleClickEvent={onDoubleClickEvent}
+          selectable
+          onView={onViewChange}
+          style={{ height: "70vh", marginBottom: "2vh" }}
+        />
+        {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} setCalendarReload={setCalendarReload} />}
+
+      </>
+    );
 }
 
 export default Content;

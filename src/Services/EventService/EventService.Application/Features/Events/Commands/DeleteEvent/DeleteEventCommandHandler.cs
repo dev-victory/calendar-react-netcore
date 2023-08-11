@@ -1,9 +1,11 @@
-﻿using EventService.Application.Features.Events.Commands.DeleteEvent;
+﻿using EventService.Application.Exceptions;
+using EventService.Application.Features.Events.Commands.DeleteEvent;
 using EventService.Application.Persistence;
 using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using System.Text.Json;
 
 namespace EventService.Application.Features.Events.Commands.CreateEvent
@@ -26,30 +28,46 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
         public async Task Handle(DeleteEventCommand request, CancellationToken cancellationToken)
         {
-            var eventEntity = await _eventRepository.GetEvent(request.EventId);
-            eventEntity.IsDeleted = true;
-
-            await _eventRepository.UpdateAsync(eventEntity);
-
-            // update cache
-            var cache = await _redisCache.GetStringAsync(eventEntity.CreatedBy, cancellationToken);
-            if (cache != null)
+            try
             {
-                var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
-                var cachedEventItem = cachedEvents.FirstOrDefault(e => e.EventId == eventEntity.EventId);
-                if (cachedEventItem != null)
+                var eventEntity = await _eventRepository.GetEvent(request.EventId);
+                eventEntity.IsDeleted = true;
+
+                await _eventRepository.UpdateAsync(eventEntity);
+
+                // update cache
+                var cache = await _redisCache.GetStringAsync(eventEntity.CreatedBy, cancellationToken);
+                if (cache != null)
                 {
-                    cachedEvents.Remove(cachedEventItem);
-                    await _redisCache.SetStringAsync(eventEntity.CreatedBy,
-                        JsonSerializer.Serialize(cachedEvents),
-                        new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
-                        });
+                    var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
+                    var cachedEventItem = cachedEvents.FirstOrDefault(e => e.EventId == eventEntity.EventId);
+                    if (cachedEventItem != null)
+                    {
+                        cachedEvents.Remove(cachedEventItem);
+                        await _redisCache.SetStringAsync(eventEntity.CreatedBy,
+                            JsonSerializer.Serialize(cachedEvents),
+                            new DistributedCacheEntryOptions
+                            {
+                                AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
+                            });
+                    }
                 }
             }
+            catch (RedisTimeoutException ex)
+            {
+                _logger.LogError($"Connection to redis cache timed out, details: \n{ex.Message}");
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogError($"Error connecting to cache, details: \n{ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error: Event {request.EventId} could not be deleted, details: \n{ex.Message}");
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong");
+            }
 
-            _logger.LogInformation($"Event {eventEntity.EventId} is deleted");
+            _logger.LogInformation($"Event {request.EventId} is deleted");
         }
     }
 }

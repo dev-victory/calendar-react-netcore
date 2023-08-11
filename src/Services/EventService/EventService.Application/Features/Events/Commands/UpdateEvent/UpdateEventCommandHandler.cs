@@ -6,6 +6,7 @@ using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using System.Text.Json;
 
 namespace EventService.Application.Features.Events.Commands.CreateEvent
@@ -19,8 +20,8 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
         public UpdateEventCommandHandler(
             IEventRepository eventRepository,
-            IMapper mapper, 
-            ILogger<UpdateEventCommandHandler> logger, 
+            IMapper mapper,
+            ILogger<UpdateEventCommandHandler> logger,
             IDistributedCache redisCache)
         {
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
@@ -31,10 +32,10 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
         public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
         {
-            var mappedEntity = _mapper.Map<Event>(request);
-
             try
             {
+                var mappedEntity = _mapper.Map<Event>(request);
+
                 mappedEntity.LastModifiedBy = request.ModifiedBy;
                 var updatedEvent = await _eventRepository.UpdateEvent(mappedEntity);
 
@@ -59,11 +60,21 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             }
             catch (DatabaseException dbEx)
             {
-                _logger.LogError($"Event {request.EventId} could not be updated in the database, details: \n{dbEx.Message}");
+                _logger.LogError($"Error: Event {request.EventId} could not be updated in the database, details: \n{dbEx.Message}");
+                throw new InternalErrorException((int)ServerErrorCodes.DatabaseError, "Something went wrong");
+            }
+            catch (RedisTimeoutException ex)
+            {
+                _logger.LogError($"Connection to redis cache timed out, details: \n{ex.Message}");
+            }
+            catch (RedisConnectionException ex)
+            {
+                _logger.LogError($"Error connecting to redis cache, details: \n{ex.Message}");
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Event {request.EventId} could not be updated, details: \n{ex.Message}");
+                _logger.LogError($"Error: Event {request.EventId} could not be updated, details: \n{ex.Message}");
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong");
             }
 
             _logger.LogInformation($"Event {request.EventId} is successfully updated");
