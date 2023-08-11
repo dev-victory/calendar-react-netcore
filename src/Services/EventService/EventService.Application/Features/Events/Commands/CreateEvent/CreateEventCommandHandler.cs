@@ -112,7 +112,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             catch (Exception ex)
             {
                 _logger.LogError($"Error: Event could not be created, details: \n{ex.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong");
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong...");
             }
 
             return newEvent.EventId;

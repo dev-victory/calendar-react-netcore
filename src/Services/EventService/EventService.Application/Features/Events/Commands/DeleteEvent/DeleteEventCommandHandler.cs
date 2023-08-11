@@ -64,7 +64,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             catch (Exception ex)
             {
                 _logger.LogError($"Error: Event {request.EventId} could not be deleted, details: \n{ex.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong");
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong...");
             }
 
             _logger.LogInformation($"Event {request.EventId} is deleted");
