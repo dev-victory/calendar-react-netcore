@@ -22,29 +22,21 @@ namespace EventService.Application.Features.Events.Queries.GetEventById
 
         public async Task<EventVm> Handle(GetEventByIdQuery request, CancellationToken cancellationToken)
         {
-            try
+            var eventDetails = await _eventRepository.GetEvent(request.EventId);
+            if (eventDetails != null)
             {
-                var eventDetails = await _eventRepository.GetEvent(request.EventId);
-                if (eventDetails != null)
+                if (eventDetails.IsDeleted)
                 {
-                    if (eventDetails.IsDeleted)
-                    {
-                        throw new NotFoundException($"Event with Id {request.EventId} was not found");
-                    }
-
-                    if (eventDetails.CreatedBy != request.UserId)
-                    {
-                        throw new UnauthorizedAccessException("You don't have permission to this event");
-                    }
+                    throw new NotFoundException($"Event with Id {request.EventId} was not found");
                 }
 
-                return _mapper.Map<EventVm>(eventDetails);
+                if (eventDetails.CreatedBy != request.UserId)
+                {
+                    throw new UnauthorizedAccessException("You don't have permission to this event");
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: Event {request.EventId} could not be deleted, details {ex.Message}");
-                throw;
-            }
+
+            return _mapper.Map<EventVm>(eventDetails);
         }
     }
 }

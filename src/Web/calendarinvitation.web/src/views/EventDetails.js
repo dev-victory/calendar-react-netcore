@@ -63,7 +63,7 @@ const EventDetails = () => {
             const responseData = await response.json();
 
             if (response.status !== 200) {
-                var errorText = response.status === 500 ? response.statusText: responseData.title;
+                var errorText = response.status === 500 ? responseData.message: responseData.title;
                 setError(errorText);
                 throw `${response.status}: An error occurred fetching event details`;
             }

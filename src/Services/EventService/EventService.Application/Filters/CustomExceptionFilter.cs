@@ -28,7 +28,11 @@ namespace EventService.Application.Filters
                     break;
                 default:
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-                    context.Result = new EmptyResult();
+                    context.Result = new JsonResult(new
+                    {
+                        Code = (int)HttpStatusCode.InternalServerError,
+                        Message = "Something went wrong"
+                    });
                     context.ExceptionHandled = true;
                     break;
             }
