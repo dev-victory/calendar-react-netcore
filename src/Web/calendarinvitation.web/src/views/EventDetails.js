@@ -168,7 +168,7 @@ const EventDetails = () => {
         return <><Loading /></>;
     } else {
         return <>
-            {error && <h1> {error} </h1>}
+            {error && <h1 className="text-danger">Error: {error} </h1>}
 
             {data && (
                 <Formik

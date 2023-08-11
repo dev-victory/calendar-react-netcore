@@ -31,7 +31,7 @@ namespace EventService.Application.Filters
                     context.Result = new JsonResult(new
                     {
                         Code = (int)HttpStatusCode.InternalServerError,
-                        Message = "Something went wrong"
+                        Message = "Something went wrong..."
                     });
                     context.ExceptionHandled = true;
                     break;
