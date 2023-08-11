@@ -9,7 +9,7 @@ namespace EventService.Api.Authorization
         {
             var role = context.User.Claims.FirstOrDefault(a => a.Type == ClaimTypes.Role)?.Value;
 
-            if (role != requirement.RequiredPermissionRole.ToLower())
+            if (role != requirement.RequiredPermissionRole.ToLower() && role != "admin")
             {
                 context.Fail();
                 return Task.CompletedTask;
