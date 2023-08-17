@@ -1,4 +1,5 @@
 ﻿using EventService.Application.Exceptions;
+using EventService.Application.Features.Events.Commands.UpdateEvent;
 using EventService.Application.Persistence;
 using EventService.Domain.Entities;
 using EventService.Infrastructure.Persistence;
@@ -99,64 +100,39 @@ namespace EventService.Infrastructure.Repositories
             return eventDetails;
         }
 
-        public async Task<Event> UpdateEvent(Event mappedEntity, Event dbEntity)
+        public async Task<Event> UpdateEvent(UpdateEventModel eventModel)
         {
             using var transaction = _dbContext.Database.BeginTransaction();
 
             try
             {
-                dbEntity.StartDate = mappedEntity.StartDate;
-                dbEntity.EndDate = mappedEntity.EndDate;
-                dbEntity.Location = mappedEntity.Location;
-                dbEntity.Description = mappedEntity.Description;
-                dbEntity.Timezone = mappedEntity.Timezone;
-                dbEntity.Name = mappedEntity.Name;
-                dbEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
-
-
                 var taskList = new List<Task>();
-                var notificationsToAdd = mappedEntity.Notifications
-                    .ExceptBy(dbEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-                var notificationsToRemove = dbEntity.Notifications
-                    .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
 
-                foreach (var item in notificationsToAdd)
+                foreach (var item in eventModel.AddNotifications)
                 {
-                    item.EventId = dbEntity.Id;
-                    item.CreatedBy = mappedEntity.LastModifiedBy;
-                    item.CreatedDate = DateTime.UtcNow;
                     taskList.Add(_eventNotificationRepository.AddAsync(item));
                 }
 
-                foreach (var item in notificationsToRemove)
+                foreach (var item in eventModel.RemoveNotifications)
                 {
                     taskList.Add(_eventNotificationRepository.DeleteAsync(item));
                 }
 
-                var inviteesToAdd = mappedEntity.Invitees
-                    .ExceptBy(dbEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
-                var inviteesToRemove = dbEntity.Invitees
-                    .ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
-
-                foreach (var item in inviteesToAdd)
+                foreach (var item in eventModel.AddInvitees)
                 {
-                    item.EventId = dbEntity.Id;
-                    item.CreatedBy = mappedEntity.LastModifiedBy;
-                    item.CreatedDate = DateTime.UtcNow;
                     taskList.Add(_eventInvitationRepository.AddAsync(item));
                 }
 
-                foreach (var item in inviteesToRemove)
+                foreach (var item in eventModel.RemoveInvitees)
                 {
                     taskList.Add(_eventInvitationRepository.DeleteAsync(item));
                 }
 
-                await Task.WhenAll(taskList).ContinueWith(async _ => await UpdateAsync(dbEntity)).Unwrap();
+                await Task.WhenAll(taskList).ContinueWith(async _ => await UpdateAsync(eventModel.Event)).Unwrap();
 
-                
                 transaction.Commit();
 
-                return dbEntity;
+                return eventModel.Event;
             }
             catch (DbUpdateException dbEx)
             {

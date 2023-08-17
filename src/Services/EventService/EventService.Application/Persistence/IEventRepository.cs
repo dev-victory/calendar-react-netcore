@@ -1,4 +1,5 @@
-﻿using EventService.Domain.Entities;
+﻿using EventService.Application.Features.Events.Commands.UpdateEvent;
+using EventService.Domain.Entities;
 
 namespace EventService.Application.Persistence
 {
@@ -6,6 +7,6 @@ namespace EventService.Application.Persistence
     {
         Task<IReadOnlyList<Event>> GetEvents(string userId, bool isFilterByWeek = true);
         Task<Event> GetEvent(Guid eventId);
-        Task<Event> UpdateEvent(Event mappedEvent, Event dbEntity);
+        Task<Event> UpdateEvent(UpdateEventModel eventModel);
     }
 }

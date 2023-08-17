@@ -35,41 +35,8 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
         {
             try
             {
-                var mappedEntity = _mapper.Map<Event>(request);
-
-                mappedEntity.LastModifiedBy = request.ModifiedBy;
-                var dbEntity = await _eventRepository.GetEvent(request.EventId);
-
-                // unique invitees and notifications only
-                mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(i => i.InviteeEmailId)
-                    .Select(g => g.First()).ToList();
-                mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(n => n.NotificationDate)
-                    .Select(g => g.First()).ToList();
-
-                if (dbEntity != null)
-                {
-                    if (dbEntity.StartDate != request.StartDate)
-                    {
-                        mappedEntity.StartDate = request.StartDate.ToUtcDate(request.Timezone);
-                    }
-                    if (dbEntity.EndDate != request.EndDate)
-                    {
-                        mappedEntity.EndDate = request.EndDate.ToUtcDate(request.Timezone);
-                    }
-
-                    foreach (var notification in mappedEntity.Notifications)
-                    {
-                        var utcNotificationDate = notification.NotificationDate.ToUtcDate(mappedEntity.Timezone);
-                        // match notification database date to the new date being added, if already exists don't reconvert to UTC
-                        var notificationExists = dbEntity.Notifications.Any(n => n.NotificationDate == utcNotificationDate);
-                        if (!notificationExists)
-                        {
-                            notification.NotificationDate = utcNotificationDate;
-                        }
-                    }
-                }
-
-                var updatedEvent = await _eventRepository.UpdateEvent(mappedEntity, dbEntity);
+                var model = await MapToUpdateEventModel(request);
+                var updatedEvent = await _eventRepository.UpdateEvent(model);
 
                 // update cache
                 var cache = await _redisCache.GetStringAsync(updatedEvent.CreatedBy, cancellationToken);
@@ -110,6 +77,74 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             }
 
             _logger.LogInformation($"Event {request.EventId} is successfully updated");
+        }
+
+        private async Task<UpdateEventModel> MapToUpdateEventModel(UpdateEventCommand request)
+        {
+            var mappedEntity = _mapper.Map<Event>(request);
+
+            mappedEntity.LastModifiedBy = request.ModifiedBy;
+            var dbEntity = await _eventRepository.GetEvent(request.EventId);
+
+            // unique invitees and notifications only
+            mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(i => i.InviteeEmailId)
+                .Select(g => g.First()).ToList();
+            mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(n => n.NotificationDate)
+                .Select(g => g.First()).ToList();
+
+            if (dbEntity != null)
+            {
+                if (dbEntity.StartDate != request.StartDate)
+                {
+                    mappedEntity.StartDate = request.StartDate.ToUtcDate(request.Timezone);
+                }
+                if (dbEntity.EndDate != request.EndDate)
+                {
+                    mappedEntity.EndDate = request.EndDate.ToUtcDate(request.Timezone);
+                }
+            }
+
+            dbEntity.StartDate = mappedEntity.StartDate;
+            dbEntity.EndDate = mappedEntity.EndDate;
+            dbEntity.Location = mappedEntity.Location;
+            dbEntity.Description = mappedEntity.Description;
+            dbEntity.Timezone = mappedEntity.Timezone;
+            dbEntity.Name = mappedEntity.Name;
+            dbEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
+
+            var notificationsToAdd = mappedEntity.Notifications
+                .ExceptBy(dbEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+            var notificationsToRemove = dbEntity.Notifications
+                .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+            var inviteesToAdd = mappedEntity.Invitees
+               .ExceptBy(dbEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+            var inviteesToRemove = dbEntity.Invitees
+                .ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+
+            foreach (var notification in notificationsToAdd)
+            {
+                var utcNotificationDate = notification.NotificationDate.ToUtcDate(mappedEntity.Timezone);
+                notification.NotificationDate = utcNotificationDate;
+                notification.EventId = dbEntity.Id;
+                notification.CreatedBy = mappedEntity.LastModifiedBy;
+                notification.CreatedDate = DateTime.UtcNow;
+            }
+
+            foreach (var item in inviteesToAdd)
+            {
+                item.EventId = dbEntity.Id;
+                item.CreatedBy = mappedEntity.LastModifiedBy;
+                item.CreatedDate = DateTime.UtcNow;
+            }
+
+            return new UpdateEventModel
+            {
+                Event = dbEntity,
+                AddNotifications = notificationsToAdd,
+                RemoveNotifications = notificationsToRemove,
+                AddInvitees = inviteesToAdd,
+                RemoveInvitees = inviteesToRemove
+            };
         }
     }
 }
