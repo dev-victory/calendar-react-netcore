@@ -3,6 +3,7 @@ using EventBus.Message.Messages;
 using EventService.Application.Exceptions;
 using EventService.Application.Persistence;
 using EventService.Application.Services;
+using EventService.Application.Utilities;
 using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
@@ -43,12 +44,15 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                 var eventEntity = _mapper.Map<Event>(request);
                 eventEntity.EventId = Guid.NewGuid();
                 eventEntity.CreatedBy = request.CreatedBy;
+                eventEntity.StartDate = request.StartDate.ToUtcDate(request.Timezone);
+                eventEntity.EndDate = request.EndDate.ToUtcDate(request.Timezone);
 
                 if (eventEntity.Notifications.Any())
                 {
                     foreach (var notification in eventEntity.Notifications)
                     {
                         notification.CreatedBy = request.CreatedBy;
+                        notification.NotificationDate = notification.NotificationDate.ToUtcDate(request.Timezone);
                     }
                 }
 
@@ -61,7 +65,6 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                     }
                 }
 
-
                 newEvent = await _eventRepository.AddAsync(eventEntity);
                 _logger.LogInformation($"Event {newEvent.EventId} is successfully created");
 
@@ -72,7 +75,8 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                     EventId = newEvent.EventId,
                     Description = newEvent.Description,
                     EndDate = newEvent.EndDate,
-                    StartDate = newEvent.StartDate
+                    StartDate = newEvent.StartDate,
+                    Timezone = newEvent.Timezone
                 };
 
                 // Publish message to event bus for notifications

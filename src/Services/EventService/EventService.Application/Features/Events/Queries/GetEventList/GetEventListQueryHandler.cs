@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
-using EventService.Application.Exceptions;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
+using EventService.Application.Utilities;
 using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
@@ -49,12 +49,14 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
                                 AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
                             });
 
-                        return _mapper.Map<List<EventVm>>(eventList.Where(e => !e.IsDeleted));
+                        return ResetEventDatesToLocalTime(
+                            _mapper.Map<List<EventVm>>(eventList.Where(e => !e.IsDeleted)));
                     }
 
                     var mappedCachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
 
-                    return _mapper.Map<List<EventVm>>(mappedCachedEvents.Where(e => !e.IsDeleted));
+                    return ResetEventDatesToLocalTime(
+                        _mapper.Map<List<EventVm>>(mappedCachedEvents.Where(e => !e.IsDeleted)));
                 }
             }
             catch (RedisTimeoutException ex)
@@ -67,7 +69,20 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
             }
 
             eventList = await _eventRepository.GetEvents(request.UserId, request.IsFilterByWeek);
-            return _mapper.Map<List<EventVm>>(eventList.Where(e => !e.IsDeleted));
+
+            return ResetEventDatesToLocalTime(
+                _mapper.Map<List<EventVm>>(eventList.Where(e => !e.IsDeleted)));
+        }
+
+        private List<EventVm> ResetEventDatesToLocalTime(List<EventVm> events)
+        {
+            foreach (var e in events)
+            {
+                e.StartDate = e.StartDate.ToLocalDate(e.Timezone);
+                e.EndDate = e.EndDate.ToLocalDate(e.Timezone);
+            }
+
+            return events;
         }
     }
 }

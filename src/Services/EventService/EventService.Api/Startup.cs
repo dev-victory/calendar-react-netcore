@@ -32,7 +32,7 @@ namespace EventService.Api
                    x.Audience = "https://calendar-invitation-api/";
                });
 
-            
+
             services.AddScoped<IAuthorizationHandler, RoleLevelHandler>();
             services.AddAuthorization(options =>
             {
@@ -46,7 +46,6 @@ namespace EventService.Api
 
             services.AddControllers(options =>
             {
-                //options.Filters.Add(typeof(NotFoundExceptionFilter));
                 options.Filters.Add(typeof(CustomExceptionFilter));
             });
 

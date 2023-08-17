@@ -21,7 +21,7 @@ namespace EventService.Application.Filters
                     context.Result = new NotFoundResult();
                     context.ExceptionHandled = true;
                     break;
-                case UnauthorizedAccessException:
+                case ForbiddenAccessException:
                     context.HttpContext.Response.StatusCode = (int)HttpStatusCode.Forbidden;
                     context.Result = new ForbidResult();
                     context.ExceptionHandled = true;

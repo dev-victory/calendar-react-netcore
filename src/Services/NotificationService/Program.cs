@@ -15,11 +15,11 @@ namespace NotificationService
             builder.Services.AddSingleton<MessageConsumerService>();
             var app = builder.Build();
 
-            var logger = app.Services.GetService<ILogger<Program>>();
+            var logger = app.Services.GetService<ILogger<MessageConsumerService>>();
 
             app.MapGet("/", async () =>
             {
-                var service = new MessageConsumerService(builder.Configuration, app.Services.GetRequiredService<IEmailService>());
+                var service = new MessageConsumerService(builder.Configuration, app.Services.GetRequiredService<IEmailService>(), logger);
                 logger.LogInformation("Connecting to Kafka event bus...");
                 await service.FetchNewEventMessage();
                 return "Hello from Notification Service!";

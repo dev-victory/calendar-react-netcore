@@ -30,6 +30,12 @@ const EventDetails = () => {
     const [dates, onChange] = useState([new Date(), new Date()]);
     const [isLoading, setIsLoading] = useState(false);
 
+    useEffect(() => {
+        setIsLoading(true);
+        getEventDetails().then((result) => {
+            setData(result);
+        }).finally(() => setIsLoading(false));
+    }, []);
 
     const MyTextArea = ({ label, ...props }) => {
         const [field, meta] = useField(props);
@@ -44,13 +50,6 @@ const EventDetails = () => {
         );
     };
 
-    useEffect(() => {
-        setIsLoading(true);
-        getEventDetails().then((result) => {
-            setData(result);
-        }).finally(() => setIsLoading(false));
-    }, []);
-
     const getEventDetails = async () => {
         try {
             const token = await getAccessTokenSilently();
@@ -63,7 +62,7 @@ const EventDetails = () => {
             const responseData = await response.json();
 
             if (response.status !== 200) {
-                var errorText = response.status === 500 ? responseData.message: responseData.title;
+                var errorText = response.status === 500 ? responseData.message : responseData.title;
                 setError(errorText);
                 throw `${response.status}: An error occurred fetching event details`;
             }
@@ -141,6 +140,11 @@ const EventDetails = () => {
                 body: JSON.stringify(body)
             });
 
+            if (response.status !== 202){
+                var responseData = await response.json();
+                throw `Error: ${response.statusText} - ${JSON.stringify(responseData.errors)}`;
+            }
+
         } catch (error) {
             throw error;
         }
@@ -202,7 +206,7 @@ const EventDetails = () => {
                                 alert('Event updated successfully!');
                             }, error => {
                                 console.error(error);
-                                alert('An error occurred while updating the event details');
+                                alert('An unexpected error occurred while saving the event');
                             }).finally(() => {
                                 setIsLoading(false);
                                 setSubmitting(false);
@@ -298,7 +302,7 @@ const EventDetails = () => {
                             </div>
                             <div className="d-flex justify-content-center">
                                 <div className={styles.actionsContainer}>
-                                    <button className="btn btn-primary rounded m-2" disabled={isSubmitting}
+                                    <button className="btn btn-info rounded m-2" disabled={isSubmitting}
                                         type="submit">
                                         Save
                                     </button>
@@ -308,7 +312,7 @@ const EventDetails = () => {
                                     >
                                         Cancel
                                     </button>
-                                    <button className="btn btn-danger rounded m-2" disabled={isSubmitting}
+                                    <button className="btn btn-outline-danger rounded m-2" disabled={isSubmitting}
                                         type="button" onClick={() => { if (window.confirm('Are you sure you want to delete this event?')) deleteEvent() }}>
                                         Delete
                                     </button>

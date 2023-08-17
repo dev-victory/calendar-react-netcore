@@ -24,25 +24,25 @@ namespace EventService.Infrastructure.Persistence
                     Name = "test event",
                     Description = "test event description",
                     Status = EventStatus.Scheduled,
-                    StartDate = DateTime.Now,
-                    EndDate = DateTime.Now.AddDays(1),
+                    StartDate = DateTime.UtcNow,
+                    EndDate = DateTime.UtcNow.AddDays(1),
                     Timezone = "",
                     Location = "",
-                    CreatedBy = "abc123456",
+                    CreatedBy = "auth0|64b00b6a1d395800db1666ac",
                     Invitees = new List<EventInvitation>
                     {
                         new EventInvitation
                         {
                             InviteeEmailId = "test@g.com",
-                            CreatedBy = "abc123456"
+                            CreatedBy = "auth0|64b00b6a1d395800db1666ac"
                         }
                     },
                     Notifications = new List<EventNotification>
                     {
                         new EventNotification
                         {
-                            NotificationDate = DateTime.Now.AddDays(15),
-                            CreatedBy = "abc123456"
+                            NotificationDate = DateTime.UtcNow.AddDays(15),
+                            CreatedBy = "auth0|64b00b6a1d395800db1666ac"
                         }
                     }
                 }

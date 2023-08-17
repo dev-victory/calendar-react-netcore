@@ -77,9 +77,11 @@ const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
         body: JSON.stringify(body)
       });
 
-      const responseData = await response.json();
+      var responseData = await response.json();
+      if (response.status != 201) {
+        throw `Error: ${response.statusText} - ${JSON.stringify(responseData.errors)}`;
+      }
 
-      console.log(responseData);
     } catch (error) {
       throw error;
     }
@@ -135,8 +137,8 @@ const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
                     setCalendarReload(true);
                   }, error => {
                     console.error(error);
-                    alert('An error occurred while saving the event');
-                  });
+                    alert('An unexpected error occurred while saving the event');
+                  }).finally(setSubmitting(false));
               }, 400);
             }}
           >
@@ -212,7 +214,7 @@ const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
                 </div>
                 <div className={styles.modalActions}>
                   <div className="d-flex justify-content-center">
-                    <button className="btn btn-primary m-2 rounded" disabled={isSubmitting}
+                    <button className="btn btn-info m-2 rounded" disabled={isSubmitting}
                       type="submit">
                       Schedule
                     </button>

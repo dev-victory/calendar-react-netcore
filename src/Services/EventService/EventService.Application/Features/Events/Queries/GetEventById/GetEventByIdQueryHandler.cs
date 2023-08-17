@@ -2,6 +2,7 @@
 using EventService.Application.Exceptions;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
+using EventService.Application.Utilities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -32,7 +33,16 @@ namespace EventService.Application.Features.Events.Queries.GetEventById
 
                 if (eventDetails.CreatedBy != request.UserId)
                 {
-                    throw new UnauthorizedAccessException("You don't have permission to this event");
+                    _logger.LogWarning($"Forbidden: User {request.UserId} doesn't have access to event ID: {request.EventId}");
+                    throw new ForbiddenAccessException();
+                }
+
+                eventDetails.StartDate = eventDetails.StartDate.ToLocalDate(eventDetails.Timezone);
+                eventDetails.EndDate = eventDetails.EndDate.ToLocalDate(eventDetails.Timezone);
+
+                foreach (var notification in eventDetails.Notifications)
+                {
+                    notification.NotificationDate = notification.NotificationDate.ToLocalDate(eventDetails.Timezone);
                 }
             }
 
