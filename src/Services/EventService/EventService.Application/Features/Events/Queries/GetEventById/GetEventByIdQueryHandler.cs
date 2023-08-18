@@ -3,6 +3,7 @@ using EventService.Application.Exceptions;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
 using EventService.Application.Utilities;
+using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -37,16 +38,21 @@ namespace EventService.Application.Features.Events.Queries.GetEventById
                     throw new ForbiddenAccessException();
                 }
 
-                eventDetails.StartDate = eventDetails.StartDate.ToLocalDate(eventDetails.Timezone);
-                eventDetails.EndDate = eventDetails.EndDate.ToLocalDate(eventDetails.Timezone);
-
-                foreach (var notification in eventDetails.Notifications)
-                {
-                    notification.NotificationDate = notification.NotificationDate.ToLocalDate(eventDetails.Timezone);
-                }
+                ResetEventDatesToLocalTime(eventDetails);
             }
 
             return _mapper.Map<EventVm>(eventDetails);
+        }
+
+        private static void ResetEventDatesToLocalTime(Event? eventDetails)
+        {
+            eventDetails.StartDate = eventDetails.StartDate.ToLocalDate(eventDetails.Timezone);
+            eventDetails.EndDate = eventDetails.EndDate.ToLocalDate(eventDetails.Timezone);
+
+            foreach (var notification in eventDetails.Notifications)
+            {
+                notification.NotificationDate = notification.NotificationDate.ToLocalDate(eventDetails.Timezone);
+            }
         }
     }
 }

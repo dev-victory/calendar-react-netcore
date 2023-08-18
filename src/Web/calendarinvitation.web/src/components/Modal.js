@@ -8,6 +8,7 @@ import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
 import '@wojtekmaj/react-datetimerange-picker/dist/DateTimeRangePicker.css';
 import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
+import { getConfig } from "../config";
 
 import { convertNotificationToDateTime, apiDateFormat } from '../utils/dates';
 
@@ -15,7 +16,7 @@ import { Formik, Form, Field, ErrorMessage, useField, FieldArray } from 'formik'
 
 // TODO: consider using Portals for a single modal component 
 // - https://legacy.reactjs.org/docs/portals.html
-const apiOrigin = "http://localhost:5020";
+const apiOrigin = getConfig().apiOrigin;
 
 const MyTextArea = ({ label, ...props }) => {
   const [field, meta] = useField(props);

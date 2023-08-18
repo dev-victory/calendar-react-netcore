@@ -1,12 +1,14 @@
 ﻿using AutoMapper;
 using EventService.Application.Exceptions;
 using EventService.Application.Features.Events.Commands.UpdateEvent;
+using EventService.Application.Models;
 using EventService.Application.Persistence;
 using EventService.Application.Utilities;
 using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -18,17 +20,20 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
         private readonly IMapper _mapper;
         private readonly ILogger<UpdateEventCommandHandler> _logger;
         private readonly IDistributedCache _redisCache;
+        private readonly int _cacheExpiryInMinutes;
 
         public UpdateEventCommandHandler(
             IEventRepository eventRepository,
             IMapper mapper,
             ILogger<UpdateEventCommandHandler> logger,
-            IDistributedCache redisCache)
+            IDistributedCache redisCache,
+            IOptions<RedisSettings> redisSettings)
         {
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _redisCache = redisCache ?? throw new ArgumentNullException(nameof(redisCache));
+            _cacheExpiryInMinutes = redisSettings.Value.CacheExpiryInMinutes;
         }
 
         public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
@@ -37,25 +42,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             {
                 var model = await MapToUpdateEventModel(request);
                 var updatedEvent = await _eventRepository.UpdateEvent(model);
-
-                // update cache
-                var cache = await _redisCache.GetStringAsync(updatedEvent.CreatedBy, cancellationToken);
-                if (cache != null)
-                {
-                    var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
-                    var cachedEventItem = cachedEvents.FirstOrDefault(e => e.EventId == request.EventId);
-                    if (cachedEventItem != null)
-                    {
-                        cachedEvents.Remove(cachedEventItem);
-                        cachedEvents.Add(updatedEvent);
-                        await _redisCache.SetStringAsync(updatedEvent.CreatedBy,
-                            JsonSerializer.Serialize(cachedEvents),
-                            new DistributedCacheEntryOptions
-                            {
-                                AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
-                            });
-                    }
-                }
+                await UpdateCache(request, updatedEvent, cancellationToken);
             }
             catch (DatabaseException dbEx)
             {
@@ -77,6 +64,27 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             }
 
             _logger.LogInformation($"Event {request.EventId} is successfully updated");
+        }
+
+        private async Task UpdateCache(UpdateEventCommand request, Event updatedEvent, CancellationToken cancellationToken)
+        {
+            var cache = await _redisCache.GetStringAsync(updatedEvent.CreatedBy, cancellationToken);
+            if (cache != null)
+            {
+                var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
+                var cachedEventItem = cachedEvents.FirstOrDefault(e => e.EventId == request.EventId);
+                if (cachedEventItem != null)
+                {
+                    cachedEvents.Remove(cachedEventItem);
+                    cachedEvents.Add(updatedEvent);
+                    await _redisCache.SetStringAsync(updatedEvent.CreatedBy,
+                        JsonSerializer.Serialize(cachedEvents),
+                        new DistributedCacheEntryOptions
+                        {
+                            AbsoluteExpiration = DateTimeOffset.UtcNow.AddMinutes(_cacheExpiryInMinutes)
+                        });
+                }
+            }
         }
 
         private async Task<UpdateEventModel> MapToUpdateEventModel(UpdateEventCommand request)

@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EventBus.Message.Messages;
 using EventService.Application.Exceptions;
+using EventService.Application.Models;
 using EventService.Application.Persistence;
 using EventService.Application.Services;
 using EventService.Application.Utilities;
@@ -8,6 +9,7 @@ using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -20,19 +22,22 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
         private readonly IMessageProducerService _messageProducerService;
         private readonly ILogger<CreateEventCommandHandler> _logger;
         private readonly IDistributedCache _redisCache;
+        private readonly int _cacheExpiryInMinutes;
 
         public CreateEventCommandHandler(
             IEventRepository eventRepository,
             IMapper mapper,
             IMessageProducerService messageProducerService,
             ILogger<CreateEventCommandHandler> logger,
-            IDistributedCache redisCache)
+            IDistributedCache redisCache,
+            IOptions<RedisSettings> redisSettings)
         {
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _messageProducerService = messageProducerService ?? throw new ArgumentNullException(nameof(messageProducerService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _redisCache = redisCache ?? throw new ArgumentNullException(nameof(redisCache));
+            _cacheExpiryInMinutes = redisSettings.Value.CacheExpiryInMinutes;
         }
 
         public async Task<Guid> Handle(CreateEventCommand request, CancellationToken cancellationToken)
@@ -86,19 +91,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                     await _messageProducerService.SendNewEventMessage(message);
                 }
 
-                // update cache
-                var cache = await _redisCache.GetStringAsync(newEvent.CreatedBy, cancellationToken);
-                if (cache != null)
-                {
-                    var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
-                    cachedEvents.Add(newEvent);
-                    await _redisCache.SetStringAsync(newEvent.CreatedBy,
-                        JsonSerializer.Serialize(cachedEvents),
-                        new DistributedCacheEntryOptions
-                        {
-                            AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
-                        });
-                }
+                await UpdateCache(newEvent, cancellationToken);
             }
             catch (DatabaseException dbEx)
             {
@@ -120,6 +113,22 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             }
 
             return newEvent.EventId;
+        }
+
+        private async Task UpdateCache(Event newEvent, CancellationToken cancellationToken)
+        {
+            var cache = await _redisCache.GetStringAsync(newEvent.CreatedBy, cancellationToken);
+            if (cache != null)
+            {
+                var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
+                cachedEvents.Add(newEvent);
+                await _redisCache.SetStringAsync(newEvent.CreatedBy,
+                    JsonSerializer.Serialize(cachedEvents),
+                    new DistributedCacheEntryOptions
+                    {
+                        AbsoluteExpiration = DateTimeOffset.UtcNow.AddMinutes(_cacheExpiryInMinutes)
+                    });
+            }
         }
     }
 }

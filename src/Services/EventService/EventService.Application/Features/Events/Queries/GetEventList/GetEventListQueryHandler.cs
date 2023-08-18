@@ -6,6 +6,7 @@ using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System.Text.Json;
 
@@ -17,16 +18,19 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
         private readonly IMapper _mapper;
         private readonly IDistributedCache _redisCache;
         private readonly ILogger<GetEventListQueryHandler> _logger;
+        private readonly int _cacheExpiryInMinutes;
 
-        public GetEventListQueryHandler(IEventRepository eventRepository,
-            IMapper mapper,
-            IDistributedCache redisCache,
-            ILogger<GetEventListQueryHandler> logger)
+        public GetEventListQueryHandler(IEventRepository eventRepository, 
+            IMapper mapper, 
+            IDistributedCache redisCache, 
+            ILogger<GetEventListQueryHandler> logger, 
+            IOptions<RedisSettings> redisSettings)
         {
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _redisCache = redisCache ?? throw new ArgumentNullException(nameof(redisCache));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cacheExpiryInMinutes = redisSettings.Value.CacheExpiryInMinutes;
         }
 
         public async Task<List<EventVm>> Handle(GetEventListQuery request, CancellationToken cancellationToken)
@@ -38,7 +42,7 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
                 if (request.IsFilterByWeek)
                 {
                     var cache = await _redisCache.GetStringAsync(request.UserId, cancellationToken);
-                    if (string.IsNullOrEmpty(cache))
+                    if (string.IsNullOrEmpty(cache) || cache == "[]")
                     {
                         eventList = await _eventRepository.GetEvents(request.UserId);
                         await _redisCache.SetStringAsync(
@@ -46,7 +50,7 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
                             JsonSerializer.Serialize(eventList),
                             new DistributedCacheEntryOptions
                             {
-                                AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
+                                AbsoluteExpiration = DateTimeOffset.UtcNow.AddMinutes(_cacheExpiryInMinutes)
                             });
 
                         return ResetEventDatesToLocalTime(

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { withRouter } from "react-router";
 import { useParams, useHistory } from 'react-router-dom';
-
+import { getConfig } from "../config";
 import { useAuth0, withAuthenticationRequired } from "@auth0/auth0-react";
 
 import DateTimeRangePicker from '@wojtekmaj/react-datetimerange-picker';
@@ -21,7 +21,7 @@ import { convertNotificationToDateTime, apiDateFormat } from '../utils/dates';
 const EventDetails = () => {
     // TODO: consider using Portals for a single modal component 
     // - https://legacy.reactjs.org/docs/portals.html
-    const apiOrigin = "http://localhost:5020";
+    const apiOrigin = getConfig().apiOrigin;
     const { getAccessTokenSilently } = useAuth0();
     const history = useHistory();
     const params = useParams();

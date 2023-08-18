@@ -1,4 +1,5 @@
-﻿using Ocelot.Cache.CacheManager;
+﻿using ApiGateway.Settings;
+using Ocelot.Cache.CacheManager;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
@@ -6,29 +7,39 @@ namespace ApiGateway
 {
     public class Startup
     {
+        private const string CorsPolicyName = "AllowClient";
+
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
         // This method gets called by the runtime. Use this method to add services to the container.
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
             var authenticationProviderKey = "Bearer";
+            var authSettings = Configuration.GetSection("Auth").Get<AuthSettings>();
 
             services.AddAuthentication()
             .AddJwtBearer(authenticationProviderKey, x =>
             {
-                x.Authority = "https://dev-xbyetq2ijrz8v4i0.us.auth0.com/"; // TODO move to appsettings.json
-                x.Audience = "https://calendar-invitation-api/";
+                x.Authority = authSettings.Authority;
+                x.Audience = authSettings.Audience;
             });
 
             services.AddOcelot()
                 .AddCacheManager(settings => settings.WithDictionaryHandle());
 
+            var corsSettings = Configuration.GetSection("Cors").Get<CorsSettings>();
             services.AddCors((options) => 
             {
-                options.AddPolicy("AllowClient", policy => 
+                options.AddPolicy(CorsPolicyName, policy => 
                 {
-                    // TODO change this
                     policy
-                    .WithOrigins(new string[] { "http://localhost:3000" })
+                    .WithOrigins(new string[] { corsSettings.AllowedOrigins })
                     .AllowAnyHeader()
                     .AllowAnyMethod();
                 });
@@ -49,11 +60,11 @@ namespace ApiGateway
             {
                 endpoints.MapGet("/", async context =>
                 {
-                    await context.Response.WriteAsync("Hello from Calendar Invite API gateway!");
+                    await context.Response.WriteAsync("Calendar Invite API gateway!");
                 });
             });
 
-            app.UseCors("AllowClient");
+            app.UseCors(CorsPolicyName);
 
             await app.UseOcelot();
         }
