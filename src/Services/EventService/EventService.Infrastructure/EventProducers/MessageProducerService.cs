@@ -42,6 +42,7 @@ namespace EventService.Infrastructure.EventProducers
             catch (ProduceException<Null, string> ex)
             {
                 _logger.LogError(ex.Message);
+                producer.Dispose();
                 throw;
             }
         }

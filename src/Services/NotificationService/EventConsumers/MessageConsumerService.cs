@@ -51,8 +51,9 @@ namespace NotificationService.EventConsumers
                     if (response.Message != null)
                     {
                         var message = JsonSerializer.Deserialize<NewCalendarEventMessage>(response.Message.Value);
+#if DEBUG
                         _logger.LogInformation($"Event {message.Name} for invitee {message.InviteeEmail} succesfully fetched from queue {Topics.NEW_EVENT_TOPIC}");
-
+#endif
                         var email = new EmailMessage
                         {
                             // ideally the body will be rendered as HTML using dotliquid or others
