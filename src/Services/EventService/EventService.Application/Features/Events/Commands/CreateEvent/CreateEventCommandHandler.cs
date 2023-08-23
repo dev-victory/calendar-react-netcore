@@ -61,7 +61,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                     }
                 }
 
-                var hasInvitees = eventEntity.Invitees.Any();
+                var hasInvitees = eventEntity.Invitees.Count > 0;
                 if (hasInvitees)
                 {
                     foreach (var invitee in eventEntity.Invitees)
@@ -73,23 +73,11 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                 newEvent = await _eventRepository.AddAsync(eventEntity);
                 _logger.LogInformation($"Event {newEvent.EventId} is successfully created");
 
-                // Send message to Kafka about the new event
-                var message = new NewCalendarEventMessage
-                {
-                    Name = newEvent.Name,
-                    EventId = newEvent.EventId,
-                    Description = newEvent.Description,
-                    EndDate = newEvent.EndDate,
-                    StartDate = newEvent.StartDate,
-                    Timezone = newEvent.Timezone
-                };
+                _logger.LogInformation($"Sending notifications to the event queue");
 
-                // Publish message to event bus for notifications
-                if (hasInvitees)
-                {
-                    message.Invitees = newEvent.Invitees.Select(x => x.InviteeEmailId).ToList();
-                    await _messageProducerService.SendNewEventMessage(message);
-                }
+                await SendEventNotifications(newEvent, hasInvitees);
+
+                _logger.LogInformation($"Notifications sent successfully to the event queue");
 
                 await UpdateCache(newEvent, cancellationToken);
             }
@@ -113,6 +101,31 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             }
 
             return newEvent.EventId;
+        }
+
+        private async Task SendEventNotifications(Event newEvent, bool hasInvitees)
+        {
+            // Send message to Kafka about the new event
+            var message = new NewCalendarEventMessage
+            {
+                Name = newEvent.Name,
+                EventId = newEvent.EventId,
+                Description = newEvent.Description,
+                EndDate = newEvent.EndDate,
+                StartDate = newEvent.StartDate,
+                Timezone = newEvent.Timezone
+            };
+
+            // Publish message to event queue for event create notification to invitees
+            // TODO: handle notifications queue using a different topic
+            if (hasInvitees)
+            {
+                foreach (var invitee in newEvent.Invitees)
+                {
+                    message.InviteeEmail = invitee.InviteeEmailId;
+                    await _messageProducerService.SendNewEventMessage(message);
+                }
+            }
         }
 
         private async Task UpdateCache(Event newEvent, CancellationToken cancellationToken)

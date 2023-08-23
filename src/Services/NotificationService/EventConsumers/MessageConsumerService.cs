@@ -6,6 +6,10 @@ using System.Text.Json;
 
 namespace NotificationService.EventConsumers
 {
+    // TODO:
+    // 1. secure access to Kafka using SASL
+    //  reference - https://medium.com/tribalscale/kafka-security-configuring-sasl-authentication-on-net-core-apps-da5d0b0fcc5
+    // 2. Create send grid account and pass a valid API Key
     public class MessageConsumerService
     {
         private readonly ConsumerConfig _config;
@@ -26,44 +30,41 @@ namespace NotificationService.EventConsumers
 
         public async Task FetchNewEventMessage()
         {
-            using var consumer = new ConsumerBuilder<Null, string>(_config).Build();
             CancellationTokenSource token = new();
-            consumer.Subscribe(Topics.NEW_EVENT_TOPIC);
-            Console.CancelKeyPress += (_, e) =>
-            {
-                e.Cancel = true; // prevent the process from terminating.
-                token.Cancel();
-            };
+            using var consumer = new ConsumerBuilder<Null, string>(_config).Build();
 
             try
             {
+                consumer.Subscribe(Topics.NEW_EVENT_TOPIC);
+                _logger.LogInformation($"Successfully connected and subscribed to {Topics.NEW_EVENT_TOPIC} topic");
+
+                Console.CancelKeyPress += (_, e) =>
+                {
+                    e.Cancel = true; // prevent the process from terminating.
+                    token.Cancel();
+                };
+
+
                 while (true)
                 {
                     var response = consumer.Consume(token.Token);
                     if (response.Message != null)
                     {
                         var message = JsonSerializer.Deserialize<NewCalendarEventMessage>(response.Message.Value);
-                        Console.WriteLine($"Event {message.Name} succesfully fetched from queue {Topics.NEW_EVENT_TOPIC}");
+                        _logger.LogInformation($"Event {message.Name} for invitee {message.InviteeEmail} succesfully fetched from queue {Topics.NEW_EVENT_TOPIC}");
 
-                        var invitees = message.Invitees;
-                        if (invitees != null && invitees.Count > 0)
+                        var email = new EmailMessage
                         {
-                            foreach (var invitee in invitees)
-                            {
-                                var email = new EmailMessage
-                                {
-                                    Body = $"You are invited to an event, details: {message.Description}."
-                                           + $"{Environment.NewLine}The event starts on "
-                                           + $"{message.StartDate.ToString("dddd, dd MMMM yyyy")} at "
-                                           + $"{message.StartDate.ToString("hh:mm tt")}",
-                                    Subject = $"You have been invited to {message.Name}",
-                                    To = invitee
-                                };
+                            // ideally the body will be rendered as HTML using dotliquid or others
+                            Body = $"You are invited to an event, details: {message.Description}."
+                                   + $"{Environment.NewLine}The event starts on "
+                                   + $"{message.StartDate.ToString("dddd, dd MMMM yyyy")} at "
+                                   + $"{message.StartDate.ToString("hh:mm tt")}",
+                            Subject = $"You have been invited to {message.Name}",
+                            To = message.InviteeEmail
+                        };
 
-                                // TODO: Create send grid account and pass a valid API Key
-                                await _emailService.SendEmail(email);
-                            }
-                        }
+                        await _emailService.SendEmail(email);
                     }
                 }
             }

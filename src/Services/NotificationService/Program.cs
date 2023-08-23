@@ -5,7 +5,6 @@ namespace NotificationService
 {
     public class Program
     {
-        // TODO: configure startup boilerplate code with configs and DI for consumer!
         public async static Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);

@@ -32,7 +32,7 @@ namespace EventService.Api
             services.AddAuthentication()
                .AddJwtBearer(authenticationProviderScheme, x =>
                {
-                   x.Authority = authSettings.Authority; // TODO move to appsettings.json
+                   x.Authority = authSettings.Authority;
                    x.Audience = authSettings.Audience;
                });
 
