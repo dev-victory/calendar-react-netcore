@@ -11,13 +11,6 @@ using System.Net;
 
 namespace EventService.Api.Controllers
 {
-    /* 
-    TODO:
-    - IMPORTANT Unit Tests
-    - event bus connection error
-    - UI: refactor code, DRY, YAGNI
-    */
-
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Policy = "MustBeVerifiedUser")]
@@ -68,6 +61,7 @@ namespace EventService.Api.Controllers
 
         [HttpPut]
         [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.Forbidden)]
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> UpdateEvent([FromBody] UpdateEventCommand command)
         {

@@ -21,7 +21,7 @@ namespace NotificationService
                 var service = new NewEventMessageConsumerService(builder.Configuration, app.Services.GetRequiredService<IEmailService>(), logger);
                 logger.LogInformation("Connecting to Kafka event bus...");
                 await service.FetchNewEventMessage();
-                return "Hello from Notification Service!";
+                return "Exiting Notification Service...";
             });
 
             app.Run();

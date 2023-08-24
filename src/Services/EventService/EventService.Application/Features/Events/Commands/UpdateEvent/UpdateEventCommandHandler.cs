@@ -89,10 +89,17 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
         private async Task<UpdateEventModel> MapToUpdateEventModel(UpdateEventCommand request)
         {
+            var dbEntity = await _eventRepository.GetEvent(request.EventId);
+            if (request.ModifiedBy != dbEntity.CreatedBy)
+            {
+                _logger.LogWarning($"Forbidden: User {request.ModifiedBy} doesn't have access to event ID: {request.EventId}");
+                throw new ForbiddenAccessException();
+            }
+
             var mappedEntity = _mapper.Map<Event>(request);
 
             mappedEntity.LastModifiedBy = request.ModifiedBy;
-            var dbEntity = await _eventRepository.GetEvent(request.EventId);
+            
 
             // unique invitees and notifications only
             mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(i => i.InviteeEmailId)
