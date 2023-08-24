@@ -10,13 +10,13 @@ namespace NotificationService.EventConsumers
     // 1. secure access to Kafka using SASL
     //  reference - https://medium.com/tribalscale/kafka-security-configuring-sasl-authentication-on-net-core-apps-da5d0b0fcc5
     // 2. Create send grid account and pass a valid API Key
-    public class MessageConsumerService
+    public class NewEventMessageConsumerService
     {
         private readonly ConsumerConfig _config;
         private readonly IEmailService _emailService;
-        private readonly ILogger<MessageConsumerService> _logger;
+        private readonly ILogger<NewEventMessageConsumerService> _logger;
 
-        public MessageConsumerService(IConfiguration config, IEmailService emailService, ILogger<MessageConsumerService> logger)
+        public NewEventMessageConsumerService(IConfiguration config, IEmailService emailService, ILogger<NewEventMessageConsumerService> logger)
         {
             _config = new ConsumerConfig
             {

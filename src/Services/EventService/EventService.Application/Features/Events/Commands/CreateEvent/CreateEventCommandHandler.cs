@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using EventBus.Message.Constants;
 using EventBus.Message.Messages;
 using EventService.Application.Exceptions;
 using EventService.Application.Models;
@@ -19,7 +20,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
     {
         private readonly IEventRepository _eventRepository;
         private readonly IMapper _mapper;
-        private readonly IMessageProducerService _messageProducerService;
+        private readonly IMessageProducerService<NewCalendarEventMessage> _messageProducerService;
         private readonly ILogger<CreateEventCommandHandler> _logger;
         private readonly IDistributedCache _redisCache;
         private readonly int _cacheExpiryInMinutes;
@@ -27,7 +28,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
         public CreateEventCommandHandler(
             IEventRepository eventRepository,
             IMapper mapper,
-            IMessageProducerService messageProducerService,
+            IMessageProducerService<NewCalendarEventMessage> messageProducerService,
             ILogger<CreateEventCommandHandler> logger,
             IDistributedCache redisCache,
             IOptions<RedisSettings> redisSettings)
@@ -71,6 +72,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                 }
 
                 newEvent = await _eventRepository.AddAsync(eventEntity);
+
                 _logger.LogInformation($"Event {newEvent.EventId} is successfully created");
 
                 _logger.LogInformation($"Sending notifications to the event queue");
@@ -123,7 +125,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                 foreach (var invitee in newEvent.Invitees)
                 {
                     message.InviteeEmail = invitee.InviteeEmailId;
-                    await _messageProducerService.SendNewEventMessage(message);
+                    await _messageProducerService.SendNewEventMessage(message, Topics.NEW_EVENT_TOPIC);
                 }
             }
         }

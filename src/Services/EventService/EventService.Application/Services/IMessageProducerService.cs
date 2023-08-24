@@ -1,9 +1,7 @@
-﻿using EventBus.Message.Messages;
-
-namespace EventService.Application.Services
+﻿namespace EventService.Application.Services
 {
-    public interface IMessageProducerService
+    public interface IMessageProducerService<T>
     {
-        Task SendNewEventMessage(NewCalendarEventMessage calEvent);
+        Task SendNewEventMessage(T message, string topic);
     }
 }

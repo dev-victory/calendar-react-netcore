@@ -50,7 +50,7 @@ namespace EventService.Infrastructure
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IEventInvitationRepository, EventInvitationRepository>();
             services.AddScoped<IEventNotificationRepository, EventNotificationRepository>();
-            services.AddSingleton<IMessageProducerService, MessageProducerService>();
+            services.AddSingleton(typeof(IMessageProducerService<>), typeof(MessageProducerService<>));
 
             return services;
         }

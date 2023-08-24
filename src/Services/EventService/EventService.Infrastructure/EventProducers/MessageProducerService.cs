@@ -1,6 +1,4 @@
 ﻿using Confluent.Kafka;
-using EventBus.Message.Constants;
-using EventBus.Message.Messages;
 using EventService.Application.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -8,12 +6,12 @@ using System.Text.Json;
 
 namespace EventService.Infrastructure.EventProducers
 {
-    public class MessageProducerService : IMessageProducerService
+    public class MessageProducerService<T> : IMessageProducerService<T>
     {
         private readonly ProducerConfig _producerConfig;
-        private readonly ILogger<MessageProducerService> _logger;
+        private readonly ILogger<MessageProducerService<T>> _logger;
 
-        public MessageProducerService(IConfiguration config, ILogger<MessageProducerService> logger)
+        public MessageProducerService(IConfiguration config, ILogger<MessageProducerService<T>> logger)
         {
             _logger = logger;
             _producerConfig = new ProducerConfig
@@ -22,13 +20,13 @@ namespace EventService.Infrastructure.EventProducers
             };
         }
 
-        public async Task SendNewEventMessage(NewCalendarEventMessage message)
+        public async Task SendNewEventMessage(T message, string topic)
         {
             using var producer = new ProducerBuilder<Null, string>(_producerConfig).Build();
 
             try
             {
-                var response = await producer.ProduceAsync(Topics.NEW_EVENT_TOPIC, new Message<Null, string>
+                var response = await producer.ProduceAsync(topic, new Message<Null, string>
                 {
                     Value = JsonSerializer.Serialize(message)
                 });
@@ -36,7 +34,7 @@ namespace EventService.Infrastructure.EventProducers
                 producer.Flush();
 
 #if DEBUG
-                _logger.LogInformation($"Event {message.Name} for invitee {message.InviteeEmail} succesfully sent to queue {Topics.NEW_EVENT_TOPIC}");
+                _logger.LogInformation($"Event succesfully sent to queue {topic}");
 #endif
             }
             catch (ProduceException<Null, string> ex)
