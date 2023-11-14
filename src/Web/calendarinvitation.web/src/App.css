@@ -1,0 +1,107 @@
+.next-steps .fa-link {
+  margin-right: 5px;
+}
+
+/* Fix for use only flexbox in content area */
+.next-steps .row {
+  margin-bottom: 0;
+}
+
+.next-steps .col-md-5 {
+  margin-bottom: 3rem;
+}
+
+@media (max-width: 768px) {
+  .next-steps .col-md-5 {
+    margin-bottom: 0;
+  }
+}
+
+.spinner {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  background-color: white;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.result-block-container .result-block {
+  opacity: 1;
+}
+
+.rbc-row-content {
+  z-index: 0;
+}
+
+.react-datetimerange-picker {
+  font-family: Arial, sans-serif;
+}
+
+.react-datetimerange-picker__wrapper {
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  width: 600px;
+}
+
+.react-datetimerange-picker__inputGroup {
+  padding: 5px;
+}
+
+.react-datetimerange-picker__inputGroup__input {
+  width: 30px;
+  height: 30px;
+  border: none;
+  outline: none;
+  text-align: center;
+}
+
+.react-datetimerange-picker__inputGroup__month
+{
+  min-width: 3.54em;
+}
+
+.react-datetimerange-picker__inputGroup__divider {
+  margin: 0 5px;
+}
+
+.react-datetimerange-picker__inputGroup__amPm {
+  width: 50px;
+}
+
+.react-datetimerange-picker__button {
+  width: 30px;
+  height: 30px;
+  border: none;
+  outline: none;
+  background-color: transparent;
+}
+
+.react-datetimerange-picker__button:hover {
+  background-color: #eee;
+}
+
+.react-calendar {
+  border: none;
+}
+
+.react-calendar__tile--active {
+  background-color: #333;
+  color: white;
+}
+
+.react-clock {
+  margin-top: 10px;
+}
+
+.react-clock__face {
+  stroke: #333;
+}
+
+.react-clock__hand--second {
+  stroke: #f00;
+}
