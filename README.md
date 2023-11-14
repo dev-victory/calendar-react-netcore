@@ -31,7 +31,7 @@ Notification service is solely responsible for sending notifications to the user
 
 **[Note]** As of now, notification service only publishes notifications for a new event to the users. 
 
-##Instructions to run the app
+## Instructions to run the app
 1. Open the solution file named `CalendarInvitation.sln` under the root folder of the project.
 
 2. Select the following projects as startup projects:
