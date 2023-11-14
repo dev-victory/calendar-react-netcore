@@ -11,13 +11,6 @@ using System.Net;
 
 namespace EventService.Api.Controllers
 {
-    /* 
-    TODO:
-    - IMPORTANT Unit Tests
-    - event bus connection error
-    - UI: refactor code, DRY, YAGNI
-    */
-
     [Route("api/v1/[controller]")]
     [ApiController]
     [Authorize(Policy = "MustBeVerifiedUser")]
@@ -36,7 +29,7 @@ namespace EventService.Api.Controllers
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId(bool? IsFilterByWeek)
         {
-            var query = new GetEventListQuery(User.Identity.Name, IsFilterByWeek ?? true);
+            var query = new GetEventListQuery(User.Identity.Name, IsFilterByWeek ?? false);
             var events = await _mediator.Send(query);
 
             return Ok(events);
@@ -68,6 +61,7 @@ namespace EventService.Api.Controllers
 
         [HttpPut]
         [ProducesResponseType((int)HttpStatusCode.Accepted)]
+        [ProducesResponseType((int)HttpStatusCode.Forbidden)]
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> UpdateEvent([FromBody] UpdateEventCommand command)
         {

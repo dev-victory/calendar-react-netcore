@@ -9,3 +9,7 @@ export function convertNotificationToDateTime (minutesToAdd, startDate) {
 export function apiDateFormat (jsDate) {
     return moment.parseZone(jsDate).format("YYYY-MM-DDTHH:mm:ss");
 }
+
+export function calendarDateFormat() {
+    return 'dd MMM yyyy hh:mm a';
+}

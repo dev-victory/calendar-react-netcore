@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
+using EventService.Application.Constants;
 using EventService.Application.Exceptions;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
 using EventService.Application.Utilities;
+using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Logging;
 
@@ -28,25 +30,32 @@ namespace EventService.Application.Features.Events.Queries.GetEventById
             {
                 if (eventDetails.IsDeleted)
                 {
-                    throw new NotFoundException($"Event with Id {request.EventId} was not found");
+                    throw new NotFoundException(string.Format(DomainErrors.EventNotFound, request.EventId));
                 }
 
                 if (eventDetails.CreatedBy != request.UserId)
                 {
-                    _logger.LogWarning($"Forbidden: User {request.UserId} doesn't have access to event ID: {request.EventId}");
+                    _logger.LogWarning(string.Format(DomainErrors.EventUserForbiddenAccess, request.UserId, request.EventId));
                     throw new ForbiddenAccessException();
                 }
 
-                eventDetails.StartDate = eventDetails.StartDate.ToLocalDate(eventDetails.Timezone);
-                eventDetails.EndDate = eventDetails.EndDate.ToLocalDate(eventDetails.Timezone);
-
-                foreach (var notification in eventDetails.Notifications)
-                {
-                    notification.NotificationDate = notification.NotificationDate.ToLocalDate(eventDetails.Timezone);
-                }
+                ResetEventDatesToLocalTime(eventDetails);
             }
 
             return _mapper.Map<EventVm>(eventDetails);
+        }
+
+        private static void ResetEventDatesToLocalTime(Event? eventDetails)
+        {
+            if (eventDetails != null && eventDetails.Timezone == null) return;
+
+            eventDetails.StartDate = eventDetails.StartDate.ToLocalDate(eventDetails.Timezone);
+            eventDetails.EndDate = eventDetails.EndDate.ToLocalDate(eventDetails.Timezone);
+
+            foreach (var notification in eventDetails.Notifications)
+            {
+                notification.NotificationDate = notification.NotificationDate.ToLocalDate(eventDetails.Timezone);
+            }
         }
     }
 }

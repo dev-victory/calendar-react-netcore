@@ -1,150 +1,173 @@
 ﻿using AutoMapper;
+using EventService.Application.Constants;
 using EventService.Application.Exceptions;
 using EventService.Application.Features.Events.Commands.UpdateEvent;
+using EventService.Application.Models;
 using EventService.Application.Persistence;
 using EventService.Application.Utilities;
 using EventService.Domain.Entities;
 using MediatR;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using StackExchange.Redis;
 using System.Text.Json;
 
 namespace EventService.Application.Features.Events.Commands.CreateEvent
 {
-    public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand>
-    {
-        private readonly IEventRepository _eventRepository;
-        private readonly IMapper _mapper;
-        private readonly ILogger<UpdateEventCommandHandler> _logger;
-        private readonly IDistributedCache _redisCache;
+	public class UpdateEventCommandHandler : IRequestHandler<UpdateEventCommand>
+	{
+		private readonly IEventRepository _eventRepository;
+		private readonly IMapper _mapper;
+		private readonly ILogger<UpdateEventCommandHandler> _logger;
+		private readonly IDistributedCache _redisCache;
+		private readonly int _cacheExpiryInMinutes;
 
-        public UpdateEventCommandHandler(
-            IEventRepository eventRepository,
-            IMapper mapper,
-            ILogger<UpdateEventCommandHandler> logger,
-            IDistributedCache redisCache)
-        {
-            _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _redisCache = redisCache ?? throw new ArgumentNullException(nameof(redisCache));
-        }
+		public UpdateEventCommandHandler(
+			IEventRepository eventRepository,
+			IMapper mapper,
+			ILogger<UpdateEventCommandHandler> logger,
+			IDistributedCache redisCache,
+			IOptions<RedisSettings> redisSettings)
+		{
+			_eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
+			_mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+			_logger = logger ?? throw new ArgumentNullException(nameof(logger));
+			_redisCache = redisCache ?? throw new ArgumentNullException(nameof(redisCache));
+			_cacheExpiryInMinutes = redisSettings.Value.CacheExpiryInMinutes;
+		}
 
-        public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
-        {
-            try
-            {
-                var model = await MapToUpdateEventModel(request);
-                var updatedEvent = await _eventRepository.UpdateEvent(model);
+		public async Task Handle(UpdateEventCommand request, CancellationToken cancellationToken)
+		{
+			try
+			{
+				var model = await MapToUpdateEventModel(request);
+				var updatedEvent = await _eventRepository.UpdateEvent(model);
+				await UpdateCache(request, updatedEvent, cancellationToken);
+			}
+			catch (DatabaseException dbEx)
+			{
+				_logger.LogError(string.Format(DomainErrors.EventModifyDatabaseError, request.EventId, "updated", dbEx.Message));
 
-                // update cache
-                var cache = await _redisCache.GetStringAsync(updatedEvent.CreatedBy, cancellationToken);
-                if (cache != null)
-                {
-                    var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
-                    var cachedEventItem = cachedEvents.FirstOrDefault(e => e.EventId == request.EventId);
-                    if (cachedEventItem != null)
-                    {
-                        cachedEvents.Remove(cachedEventItem);
-                        cachedEvents.Add(updatedEvent);
-                        await _redisCache.SetStringAsync(updatedEvent.CreatedBy,
-                            JsonSerializer.Serialize(cachedEvents),
-                            new DistributedCacheEntryOptions
-                            {
-                                AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(1)
-                            });
-                    }
-                }
-            }
-            catch (DatabaseException dbEx)
-            {
-                _logger.LogError($"Error: Event {request.EventId} could not be updated in the database, details: \n{dbEx.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.DatabaseError, "Something went wrong");
-            }
-            catch (RedisTimeoutException ex)
-            {
-                _logger.LogError($"Connection to redis cache timed out, details: \n{ex.Message}");
-            }
-            catch (RedisConnectionException ex)
-            {
-                _logger.LogError($"Error connecting to redis cache, details: \n{ex.Message}");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error: Event {request.EventId} could not be updated, details: \n{ex.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong...");
-            }
+				throw new InternalErrorException((int)ServerErrorCodes.DatabaseError, DomainErrors.SomethingWentWrong);
+			}
+			catch (RedisTimeoutException ex)
+			{
+				_logger.LogError(string.Format(DomainErrors.RedisCacheTimeout, ex.Message));
+			}
+			catch (RedisConnectionException ex)
+			{
+				_logger.LogError(string.Format(DomainErrors.RedisCacheConnectionError, ex.Message));
+			}
+			catch (ForbiddenAccessException forEx)
+			{
+				throw forEx;
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(string.Format(DomainErrors.EventModifyError, request.EventId, "updated", ex.Message));
 
-            _logger.LogInformation($"Event {request.EventId} is successfully updated");
-        }
+				throw new InternalErrorException((int)ServerErrorCodes.Unknown, DomainErrors.SomethingWentWrong);
+			}
 
-        private async Task<UpdateEventModel> MapToUpdateEventModel(UpdateEventCommand request)
-        {
-            var mappedEntity = _mapper.Map<Event>(request);
+			_logger.LogInformation($"Event {request.EventId} is successfully updated");
+		}
 
-            mappedEntity.LastModifiedBy = request.ModifiedBy;
-            var dbEntity = await _eventRepository.GetEvent(request.EventId);
+		private async Task UpdateCache(UpdateEventCommand request, Event updatedEvent, CancellationToken cancellationToken)
+		{
+			var cache = await _redisCache.GetStringAsync(updatedEvent.CreatedBy, cancellationToken);
+			if (cache != null)
+			{
+				var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
+				var cachedEventItem = cachedEvents.FirstOrDefault(e => e.EventId == request.EventId);
+				if (cachedEventItem != null)
+				{
+					cachedEvents.Remove(cachedEventItem);
+					cachedEvents.Add(updatedEvent);
+					await _redisCache.SetStringAsync(updatedEvent.CreatedBy,
+						JsonSerializer.Serialize(cachedEvents),
+						new DistributedCacheEntryOptions
+						{
+							AbsoluteExpiration = DateTimeOffset.UtcNow.AddMinutes(_cacheExpiryInMinutes)
+						});
+				}
+			}
+		}
 
-            // unique invitees and notifications only
-            mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(i => i.InviteeEmailId)
-                .Select(g => g.First()).ToList();
-            mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(n => n.NotificationDate)
-                .Select(g => g.First()).ToList();
+		internal async Task<UpdateEventModel> MapToUpdateEventModel(UpdateEventCommand request)
+		{
+			var dbEntity = await _eventRepository.GetEvent(request.EventId);
+			if (request.ModifiedBy != dbEntity.CreatedBy)
+			{
+				_logger.LogWarning(string.Format(DomainErrors.EventUserForbiddenAccess, request.ModifiedBy, request.EventId));
 
-            if (dbEntity != null)
-            {
-                if (dbEntity.StartDate != request.StartDate)
-                {
-                    mappedEntity.StartDate = request.StartDate.ToUtcDate(request.Timezone);
-                }
-                if (dbEntity.EndDate != request.EndDate)
-                {
-                    mappedEntity.EndDate = request.EndDate.ToUtcDate(request.Timezone);
-                }
-            }
+				throw new ForbiddenAccessException();
+			}
 
-            dbEntity.StartDate = mappedEntity.StartDate;
-            dbEntity.EndDate = mappedEntity.EndDate;
-            dbEntity.Location = mappedEntity.Location;
-            dbEntity.Description = mappedEntity.Description;
-            dbEntity.Timezone = mappedEntity.Timezone;
-            dbEntity.Name = mappedEntity.Name;
-            dbEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
+			var mappedEntity = _mapper.Map<Event>(request);
 
-            var notificationsToAdd = mappedEntity.Notifications
-                .ExceptBy(dbEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-            var notificationsToRemove = dbEntity.Notifications
-                .ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
-            var inviteesToAdd = mappedEntity.Invitees
-               .ExceptBy(dbEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
-            var inviteesToRemove = dbEntity.Invitees
-                .ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+			mappedEntity.LastModifiedBy = request.ModifiedBy;
 
-            foreach (var notification in notificationsToAdd)
-            {
-                var utcNotificationDate = notification.NotificationDate.ToUtcDate(mappedEntity.Timezone);
-                notification.NotificationDate = utcNotificationDate;
-                notification.EventId = dbEntity.Id;
-                notification.CreatedBy = mappedEntity.LastModifiedBy;
-                notification.CreatedDate = DateTime.UtcNow;
-            }
 
-            foreach (var item in inviteesToAdd)
-            {
-                item.EventId = dbEntity.Id;
-                item.CreatedBy = mappedEntity.LastModifiedBy;
-                item.CreatedDate = DateTime.UtcNow;
-            }
+			// unique invitees and notifications only
+			mappedEntity.Invitees = mappedEntity.Invitees.GroupBy(i => i.InviteeEmailId)
+				.Select(g => g.First()).ToList();
+			mappedEntity.Notifications = mappedEntity.Notifications.GroupBy(n => n.NotificationDate)
+				.Select(g => g.First()).ToList();
 
-            return new UpdateEventModel
-            {
-                Event = dbEntity,
-                AddNotifications = notificationsToAdd,
-                RemoveNotifications = notificationsToRemove,
-                AddInvitees = inviteesToAdd,
-                RemoveInvitees = inviteesToRemove
-            };
-        }
-    }
+			if (dbEntity != null)
+			{
+				if (dbEntity.StartDate != request.StartDate)
+				{
+					mappedEntity.StartDate = request.StartDate.ToUtcDate(request.Timezone);
+				}
+				if (dbEntity.EndDate != request.EndDate)
+				{
+					mappedEntity.EndDate = request.EndDate.ToUtcDate(request.Timezone);
+				}
+			}
+
+			dbEntity.StartDate = mappedEntity.StartDate;
+			dbEntity.EndDate = mappedEntity.EndDate;
+			dbEntity.Location = mappedEntity.Location;
+			dbEntity.Description = mappedEntity.Description;
+			dbEntity.Timezone = mappedEntity.Timezone;
+			dbEntity.Name = mappedEntity.Name;
+			dbEntity.LastModifiedBy = mappedEntity.LastModifiedBy;
+
+			var notificationsToAdd = mappedEntity.Notifications
+				.ExceptBy(dbEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+			var notificationsToRemove = dbEntity.Notifications
+				.ExceptBy(mappedEntity.Notifications.Select(e => e.NotificationDate), e => e.NotificationDate).ToList();
+			var inviteesToAdd = mappedEntity.Invitees
+				.ExceptBy(dbEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+			var inviteesToRemove = dbEntity.Invitees
+				.ExceptBy(mappedEntity.Invitees.Select(e => e.InviteeEmailId), e => e.InviteeEmailId).ToList();
+
+			foreach (var notification in notificationsToAdd)
+			{
+				var utcNotificationDate = notification.NotificationDate.ToUtcDate(mappedEntity.Timezone);
+				notification.NotificationDate = utcNotificationDate;
+				notification.EventId = dbEntity.Id;
+				notification.CreatedBy = mappedEntity.LastModifiedBy;
+				notification.CreatedDate = DateTime.UtcNow;
+			}
+
+			foreach (var item in inviteesToAdd)
+			{
+				item.EventId = dbEntity.Id;
+				item.CreatedBy = mappedEntity.LastModifiedBy;
+				item.CreatedDate = DateTime.UtcNow;
+			}
+
+			return new UpdateEventModel
+			{
+				Event = dbEntity,
+				AddNotifications = notificationsToAdd,
+				RemoveNotifications = notificationsToRemove,
+				AddInvitees = inviteesToAdd,
+				RemoveInvitees = inviteesToRemove
+			};
+		}
+	}
 }

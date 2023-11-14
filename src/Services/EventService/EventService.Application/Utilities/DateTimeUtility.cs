@@ -1,4 +1,6 @@
-﻿namespace EventService.Application.Utilities
+﻿using System.Globalization;
+
+namespace EventService.Application.Utilities
 {
     public static class DateTimeUtility
     {
@@ -12,6 +14,8 @@
         {
             // Find the corresponding Windows time zone by the IANA time zone name
             TimeZoneInfo timeZoneInfo = TimeZoneConverter.TZConvert.GetTimeZoneInfo(timeZone);
+            // TODO: revisit this specify kind thing
+            localDate = DateTime.SpecifyKind(localDate, DateTimeKind.Unspecified);
             // Convert the local time to UTC by using the time zone info
             return TimeZoneInfo.ConvertTimeToUtc(localDate, timeZoneInfo);
         }
@@ -26,6 +30,8 @@
         {
             // Find the corresponding Windows time zone by the IANA time zone name
             TimeZoneInfo timeZoneInfo = TimeZoneConverter.TZConvert.GetTimeZoneInfo(timeZone);
+            // TODO: revisit this specify kind thing
+            utcDate = DateTime.SpecifyKind(utcDate, DateTimeKind.Utc);
             // Convert the local time to UTC by using the time zone info
             return TimeZoneInfo.ConvertTimeFromUtc(utcDate, timeZoneInfo);
         }

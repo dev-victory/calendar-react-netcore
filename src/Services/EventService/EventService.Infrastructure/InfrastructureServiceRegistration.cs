@@ -1,4 +1,5 @@
-﻿using EventService.Application.Persistence;
+﻿using EventService.Application.Models;
+using EventService.Application.Persistence;
 using EventService.Application.Services;
 using EventService.Infrastructure.EventProducers;
 using EventService.Infrastructure.Persistence;
@@ -7,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
-using System.Net;
 
 namespace EventService.Infrastructure
 {
@@ -22,12 +22,12 @@ namespace EventService.Infrastructure
             {
                 options.ConnectionMultiplexerFactory = async () =>
                 {
-                    var conn = configuration.GetSection("CacheSettings:ConnectionString").Value;
-
+                    var redisSettings = configuration.GetSection("Redis").Get<RedisSettings>();
                     var configurationOptions = new ConfigurationOptions();
-                    configurationOptions.EndPoints.Add(conn);
-                    configurationOptions.ConnectTimeout = 10000;
-                    configurationOptions.ConnectRetry = 3;
+
+                    configurationOptions.EndPoints.Add(redisSettings.ConnectionString);
+                    configurationOptions.ConnectTimeout = redisSettings.ConnectionTimeoutInMilliseconds;
+                    configurationOptions.ConnectRetry = redisSettings.MaxRetryCount;
 
                     // Create and configure your ConnectionMultiplexer here
                     var connection = await ConnectionMultiplexer.ConnectAsync(configurationOptions);
@@ -50,7 +50,7 @@ namespace EventService.Infrastructure
             services.AddScoped<IEventRepository, EventRepository>();
             services.AddScoped<IEventInvitationRepository, EventInvitationRepository>();
             services.AddScoped<IEventNotificationRepository, EventNotificationRepository>();
-            services.AddSingleton<IMessageProducerService, MessageProducerService>();
+            services.AddSingleton(typeof(IMessageProducerService<>), typeof(MessageProducerService<>));
 
             return services;
         }

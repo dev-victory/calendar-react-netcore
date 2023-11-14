@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useHistory } from 'react-router-dom';
+import { getConfig } from "../config";
 
 import { Calendar, momentLocalizer, Views } from "react-big-calendar";
 import moment from "moment";
@@ -9,7 +10,7 @@ import Modal from "./Modal";
 
 const Content = () => {
   const localizer = momentLocalizer(moment);
-  const apiOrigin = "http://localhost:5020"; // TODO move to config
+  const apiOrigin = getConfig().apiOrigin;
   const { getAccessTokenSilently } = useAuth0();
   const history = useHistory();
   const [isOpen, setIsOpen] = useState(false);
@@ -79,23 +80,28 @@ const Content = () => {
     setIsOpen(true);
   }, []);
 
-    return (
-      <>
-        <Calendar
-          localizer={localizer}
-          defaultDate={new Date()}
-          defaultView={Views.WEEK}
-          events={state.events}
-          onSelectSlot={openAddEventModal}
-          onDoubleClickEvent={onDoubleClickEvent}
-          selectable
-          onView={onViewChange}
-          style={{ height: "70vh", marginBottom: "2vh" }}
-        />
-        {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} setCalendarReload={setCalendarReload} />}
+  const onRangeChange = (range) => {
+    // TODO: get by range
+  }
 
-      </>
-    );
+  return (
+    <>
+      <Calendar
+        localizer={localizer}
+        defaultDate={new Date()}
+        defaultView={Views.WEEK}
+        events={state.events}
+        onSelectSlot={openAddEventModal}
+        onDoubleClickEvent={onDoubleClickEvent}
+        selectable
+        onView={onViewChange}
+        onRangeChange={onRangeChange}
+        style={{ height: "70vh", marginBottom: "2vh" }}
+      />
+      {isOpen && <Modal setIsOpen={setIsOpen} eventData={eventData} setCalendarReload={setCalendarReload} />}
+
+    </>
+  );
 }
 
 export default Content;
