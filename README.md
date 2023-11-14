@@ -52,7 +52,8 @@ This will start the Calender Invitation react app on `localhost:3000`.
 ## Project Technical Details
 - **calendarinvitation.web**: is a vanilla react app secured using Auth0 library for user management. This app uses a few third-party `npm` calendar UI component libraries. The app has a basic routing structure setup for navigation.
 - **EventService.Api**: is a .NET 7 web app talking to class library services that are designed using Clean Architecture principles as descirbed out by Jason Taylor in the [Clean Architecture repo](https://github.com/jasontaylordev/CleanArchitecture). 
-The application messages are exchanged within the application as commands and queries as per CQRS design pattern. The infrastructure layer uses Entity Framework Core v7, the backend layer talks to a SQL server instance.
+The application messages are exchanged within the application as commands and queries as per CQRS design pattern. The incoming command and query messages are validated using `Fluent Validation` library.
+The infrastructure layer uses Entity Framework Core v7, the backend layer talks to a SQL server instance.
 - **ApiGateway**: is a .NET 7 web app that uses Ocelot API Gateway library for exposing the backend services. The API gateway is secured using an auth server powered by Auth0. The gateway routes are setup in the `ocelot.local.json` file.
 - **NotificationService**: is a .NET 7 web app with a `minimal API` endpoint that gets data from a consumer service in sync with a Kafka event queue.
 - **EventService.Application.Tests**: a suite of `xUnit` tests is added for code coverage of the primary application functional units for a sanity check.
