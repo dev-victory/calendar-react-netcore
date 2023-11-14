@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using EventBus.Message.Constants;
 using EventBus.Message.Messages;
+using EventService.Application.Constants;
 using EventService.Application.Exceptions;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
@@ -50,10 +51,11 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                 var eventEntity = _mapper.Map<Event>(request);
                 eventEntity.EventId = Guid.NewGuid();
                 eventEntity.CreatedBy = request.CreatedBy;
-                eventEntity.StartDate = request.StartDate.ToUtcDate(request.Timezone);
-                eventEntity.EndDate = request.EndDate.ToUtcDate(request.Timezone);
+                eventEntity.StartDate = request.StartDate != DateTime.MinValue ? request.StartDate.ToUtcDate(request.Timezone) : DateTime.Now;
+                eventEntity.EndDate = request.EndDate != DateTime.MinValue ? request.EndDate.ToUtcDate(request.Timezone) : DateTime.Now;
 
-                if (eventEntity.Notifications.Any())
+
+                if (eventEntity.Notifications?.Any() ?? false)
                 {
                     foreach (var notification in eventEntity.Notifications)
                     {
@@ -62,7 +64,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
                     }
                 }
 
-                var hasInvitees = eventEntity.Invitees.Count > 0;
+                var hasInvitees = eventEntity.Invitees?.Count > 0;
                 if (hasInvitees)
                 {
                     foreach (var invitee in eventEntity.Invitees)
@@ -75,31 +77,35 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
                 _logger.LogInformation($"Event {newEvent.EventId} is successfully created");
 
+#if DEBUG
                 _logger.LogInformation($"Sending notifications to the event queue");
+#endif
 
                 await SendEventNotifications(newEvent, hasInvitees);
 
-                _logger.LogInformation($"Notifications sent successfully to the event queue");
+                _logger.LogInformation($"Notifications sent successfully to the event queue named \"{Topics.NEW_EVENT_TOPIC}\"");
 
                 await UpdateCache(newEvent, cancellationToken);
             }
             catch (DatabaseException dbEx)
             {
-                _logger.LogError($"Error: Event could not be created in the database, details: \n{dbEx.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.DatabaseError, "Something went wrong");
+                _logger.LogError(string.Format(DomainErrors.EventModifyDatabaseError, Guid.Empty, "created", dbEx.Message));
+
+                throw new InternalErrorException((int)ServerErrorCodes.DatabaseError, DomainErrors.SomethingWentWrong);
             }
             catch (RedisTimeoutException ex)
             {
-                _logger.LogError($"Connection to redis cache timed out, details: \n{ex.Message}");
+                _logger.LogError(string.Format(DomainErrors.RedisCacheTimeout, ex.Message));
             }
             catch (RedisConnectionException ex)
             {
-                _logger.LogError($"Error connecting to redis cache, details: \n{ex.Message}");
+                _logger.LogError(string.Format(DomainErrors.RedisCacheConnectionError, ex.Message));
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error: Event could not be created, details: \n{ex.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong...");
+                _logger.LogError(string.Format(DomainErrors.EventModifyError, Guid.Empty, "created", ex.Message));
+
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, DomainErrors.SomethingWentWrong);
             }
 
             return newEvent.EventId;
@@ -132,10 +138,10 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
         private async Task UpdateCache(Event newEvent, CancellationToken cancellationToken)
         {
-            var cache = await _redisCache.GetStringAsync(newEvent.CreatedBy, cancellationToken);
-            if (cache != null)
+            var cacheData = await _redisCache.GetStringAsync(newEvent.CreatedBy, cancellationToken);
+            if (!string.IsNullOrEmpty(cacheData))
             {
-                var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cache);
+                var cachedEvents = JsonSerializer.Deserialize<List<Event>>(cacheData);
                 cachedEvents.Add(newEvent);
                 await _redisCache.SetStringAsync(newEvent.CreatedBy,
                     JsonSerializer.Serialize(cachedEvents),

@@ -1,4 +1,5 @@
-﻿using EventService.Application.Exceptions;
+﻿using EventService.Application.Constants;
+using EventService.Application.Exceptions;
 using EventService.Application.Features.Events.Commands.DeleteEvent;
 using EventService.Application.Models;
 using EventService.Application.Persistence;
@@ -28,6 +29,7 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             _eventRepository = eventRepository ?? throw new ArgumentNullException(nameof(eventRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _redisCache = redisCache ?? throw new ArgumentNullException(nameof(redisCache));
+            _cacheExpiryInMinutes = redisSettings.Value.CacheExpiryInMinutes;
         }
 
         public async Task Handle(DeleteEventCommand request, CancellationToken cancellationToken)
@@ -38,7 +40,8 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
 
                 if (eventEntity.CreatedBy != request.UserId)
                 {
-                    _logger.LogWarning($"Forbidden: User {request.UserId} doesn't have access to event ID: {request.EventId}");
+                    _logger.LogWarning(string.Format(DomainErrors.EventUserForbiddenAccess, request.UserId, request.EventId));
+
                     throw new ForbiddenAccessException();
                 }
 
@@ -49,16 +52,27 @@ namespace EventService.Application.Features.Events.Commands.CreateEvent
             }
             catch (RedisTimeoutException ex)
             {
-                _logger.LogError($"Connection to redis cache timed out, details: \n{ex.Message}");
+                _logger.LogError(string.Format(DomainErrors.RedisCacheTimeout, ex.Message));
             }
             catch (RedisConnectionException ex)
             {
-                _logger.LogError($"Error connecting to cache, details: \n{ex.Message}");
+                _logger.LogError(string.Format(DomainErrors.RedisCacheConnectionError, ex.Message));
+            }
+            catch (DatabaseException ex)
+            {
+                _logger.LogError(string.Format(DomainErrors.EventModifyDatabaseError, request.EventId, "deleted", ex.Message));
+
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, DomainErrors.SomethingWentWrong);
+            }
+            catch (ForbiddenAccessException forEx)
+            {
+                throw forEx;
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error: Event {request.EventId} could not be deleted, details: \n{ex.Message}");
-                throw new InternalErrorException((int)ServerErrorCodes.Unknown, "Something went wrong...");
+                _logger.LogError(string.Format(DomainErrors.EventModifyError, request.EventId, "deleted", ex.Message));
+
+                throw new InternalErrorException((int)ServerErrorCodes.Unknown, DomainErrors.SomethingWentWrong);
             }
 
             _logger.LogInformation($"Event {request.EventId} is deleted");

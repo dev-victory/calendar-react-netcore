@@ -16,7 +16,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 import Loading from "../components/Loading";
 import styles from "../components/Modal.module.css";
-import { convertNotificationToDateTime, apiDateFormat } from '../utils/dates';
+import { convertNotificationToDateTime, apiDateFormat, calendarDateFormat } from '../utils/dates';
 
 const EventDetails = () => {
     // TODO: consider using Portals for a single modal component 
@@ -219,7 +219,7 @@ const EventDetails = () => {
                             <h1 className="mb-2"><FontAwesomeIcon icon={faEdit} /> Manage Event</h1>
                             <div className={styles.modalContent}>
                                 <div className="mb-2 w-100 d-flex">
-                                    <DateTimeRangePicker required={true} className="pull-left" onChange={onChange} value={dates} format={'dd MMM yyyy hh:mm a'} />
+                                    <DateTimeRangePicker required={true} className="pull-left" onChange={onChange} value={dates} format={calendarDateFormat()} />
                                 </div>
                                 <div className="mb-2 w-100 d-flex">
                                     <Field type="input" name="name" placeholder="Name" className="d-block form-control" />

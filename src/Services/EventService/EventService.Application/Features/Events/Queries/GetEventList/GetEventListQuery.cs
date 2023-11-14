@@ -8,10 +8,10 @@ namespace EventService.Application.Features.Events.Queries.GetEventList
         public string UserId { get; set; }
         public bool IsFilterByWeek { get; set; }
 
-        public GetEventListQuery(string userId, bool isGetByMonth)
+        public GetEventListQuery(string userId, bool isFilterByWeek)
         {
             UserId = userId;
-            IsFilterByWeek = isGetByMonth;
+            IsFilterByWeek = isFilterByWeek;
         }
     }
 }

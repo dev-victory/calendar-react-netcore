@@ -10,7 +10,7 @@ import 'react-calendar/dist/Calendar.css';
 import 'react-clock/dist/Clock.css';
 import { getConfig } from "../config";
 
-import { convertNotificationToDateTime, apiDateFormat } from '../utils/dates';
+import { convertNotificationToDateTime, apiDateFormat, calendarDateFormat } from '../utils/dates';
 
 import { Formik, Form, Field, ErrorMessage, useField, FieldArray } from 'formik';
 
@@ -147,7 +147,7 @@ const Modal = ({ setIsOpen, eventData, setCalendarReload }) => {
               <Form>
                 <div className={styles.modalContent}>
                   <div className="mb-2">
-                    <DateTimeRangePicker required={true} onChange={onChange} value={dates} className="w-100" format={'dd MMM yyyy hh:mm a'} />
+                    <DateTimeRangePicker required={true} onChange={onChange} value={dates} className="w-100" format={calendarDateFormat()} />
                   </div>
 
                   <Field type="input" name="name" placeholder="Name" className="d-block form-control" />

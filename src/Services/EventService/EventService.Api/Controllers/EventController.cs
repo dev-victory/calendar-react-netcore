@@ -29,7 +29,7 @@ namespace EventService.Api.Controllers
         [ProducesResponseType((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult<IEnumerable<EventVm>>> GetEventsByUserId(bool? IsFilterByWeek)
         {
-            var query = new GetEventListQuery(User.Identity.Name, IsFilterByWeek ?? true);
+            var query = new GetEventListQuery(User.Identity.Name, IsFilterByWeek ?? false);
             var events = await _mediator.Send(query);
 
             return Ok(events);
